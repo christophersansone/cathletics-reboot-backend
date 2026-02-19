@@ -1,0 +1,49 @@
+services:
+  db:
+    image: postgres:16
+    platform: linux/arm64
+    volumes:
+      - postgres_data_cathletics:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: password
+
+  rails: &base_app
+    build: .
+    platform: linux/arm64
+    volumes:
+      - .:/usr/src/app
+      - gems:/usr/src/bundle
+    depends_on:
+      - db
+      - mailcatcher
+      - redis
+    ports:
+      - '3000:3000'
+    command: bundle exec puma -C config/puma.rb
+    environment: &base_env
+      RAILS_MAX_THREADS: 1
+      DATABASE_URL: postgresql://postgres:password@db:5432/cathletics_development
+      REDIS_URL: redis://redis:6379/1
+
+  sidekiq:
+    <<: *base_app # Inherit build/volumes/depends_on from web
+    command: bundle exec sidekiq
+    ports: [] # Sidekiq doesn't need external ports
+    environment:
+      <<: *base_env
+
+  redis:
+    image: redis:7-alpine
+    platform: linux/arm64
+    ports:
+      - '6379:6379'
+
+  mailcatcher:
+    image: 'schickling/mailcatcher'
+    ports:
+      - '1080:1080'
+      - '1025:1025'
+
+volumes:
+  postgres_data_cathletics:
+  gems:
