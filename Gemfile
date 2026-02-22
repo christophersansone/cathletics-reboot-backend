@@ -45,6 +45,7 @@ gem "sidekiq", "~> 8.1.1"
 gem "legendary_json_api", git: 'https://github.com/christophersansone/legendary-json-api.git', tag: 'v0.1.2'
 gem "doorkeeper"
 gem "cancancan"
+gem "rack-cors", "~> 3.0.0", require: "rack/cors"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
