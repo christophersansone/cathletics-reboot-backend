@@ -1,4 +1,4 @@
-class TeamMembershipSerializer < LegendaryJsonApi::Serializer
+class TeamMembershipSerializer < BaseSerializer
   attributes :role
 
   belongs_to :team

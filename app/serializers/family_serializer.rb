@@ -1,4 +1,4 @@
-class FamilySerializer < LegendaryJsonApi::Serializer
+class FamilySerializer < BaseSerializer
   attributes :name
 
   has_many :family_memberships

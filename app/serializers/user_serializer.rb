@@ -1,4 +1,4 @@
-class UserSerializer < LegendaryJsonApi::Serializer
+class UserSerializer < BaseSerializer
   attributes :first_name, :last_name, :email, :nickname,
              :date_of_birth, :grade_level, :gender
 
@@ -11,5 +11,5 @@ class UserSerializer < LegendaryJsonApi::Serializer
   end
 
   has_many :family_memberships
-  has_many :organization_memberships
+  has_many :organization_memberships, link: ->(user) { url_helpers.api_v1_organization_memberships_url(user_id: user.id) }
 end

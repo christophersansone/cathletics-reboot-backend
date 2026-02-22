@@ -1,4 +1,4 @@
-class LeagueSerializer < LegendaryJsonApi::Serializer
+class LeagueSerializer < BaseSerializer
   attributes :name, :gender, :min_grade, :max_grade,
              :min_age, :max_age, :age_cutoff_date, :capacity
 

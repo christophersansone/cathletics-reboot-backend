@@ -1,4 +1,4 @@
-class OrganizationMembershipSerializer < LegendaryJsonApi::Serializer
+class OrganizationMembershipSerializer < BaseSerializer
   attributes :role
 
   belongs_to :organization

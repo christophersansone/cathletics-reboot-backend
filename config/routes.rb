@@ -11,6 +11,7 @@ Rails.application.routes.draw do
       resource :me, only: [:show, :update], controller: "me"
 
       resources :users
+      resources :organization_memberships, only: [:index]
       resources :families do
         resources :family_memberships, path: "memberships"
       end

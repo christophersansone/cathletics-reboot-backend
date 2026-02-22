@@ -1,4 +1,4 @@
-class TeamSerializer < LegendaryJsonApi::Serializer
+class TeamSerializer < BaseSerializer
   attributes :name
 
   belongs_to :league

@@ -1,4 +1,4 @@
-class RegistrationSerializer < LegendaryJsonApi::Serializer
+class RegistrationSerializer < BaseSerializer
   attributes :status
 
   belongs_to :league

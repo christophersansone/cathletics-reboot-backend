@@ -1,4 +1,4 @@
-class SeasonSerializer < LegendaryJsonApi::Serializer
+class SeasonSerializer < BaseSerializer
   attributes :name, :start_date, :end_date,
              :registration_start_at, :registration_end_at
 

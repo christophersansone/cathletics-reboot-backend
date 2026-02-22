@@ -43,7 +43,7 @@ module Api
       private
 
       def set_organization
-        @organization = Organization.find_by!(slug: params[:slug])
+        @organization = Organization.find_by(slug: params[:slug]) || Organization.find(params[:slug])
       end
 
       def organization_params

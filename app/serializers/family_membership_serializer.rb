@@ -1,4 +1,4 @@
-class FamilyMembershipSerializer < LegendaryJsonApi::Serializer
+class FamilyMembershipSerializer < BaseSerializer
   attributes :role
 
   belongs_to :family

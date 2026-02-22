@@ -4,7 +4,11 @@ module Api
       before_action :set_organization_membership, only: [:show, :update, :destroy]
 
       def index
-        memberships = current_organization.organization_memberships
+        memberships = if current_organization
+          current_organization.organization_memberships
+        else
+          current_user.organization_memberships.includes(:organization)
+        end
         render_models memberships
       end
 

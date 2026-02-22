@@ -1,4 +1,4 @@
-class ActivityTypeSerializer < LegendaryJsonApi::Serializer
+class ActivityTypeSerializer < BaseSerializer
   attributes :name, :description
 
   belongs_to :organization
