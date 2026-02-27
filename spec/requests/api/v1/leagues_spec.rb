@@ -11,13 +11,11 @@ RSpec.describe "Api::V1::Leagues" do
     create(:organization_membership, :admin, user: admin, organization: organization)
   end
 
-  let(:base_path) do
-    "/api/v1/organizations/#{organization.slug}/activity_types/#{activity_type.id}/seasons/#{season.id}/leagues"
-  end
+  let(:base_path) { "/api/v1/activity_types/#{activity_type.id}/seasons/#{season.id}/leagues" }
 
   describe "GET .../seasons/:season_id/leagues" do
     it "returns leagues for the season" do
-      get base_path, headers: auth_headers_for(admin)
+      get base_path, headers: auth_headers_for(admin, organization: organization)
 
       expect(response).to have_http_status(:ok)
       expect(parsed_body["data"].length).to eq(1)
@@ -41,7 +39,7 @@ RSpec.describe "Api::V1::Leagues" do
 
     it "creates a league" do
       expect {
-        post base_path, params: params, headers: auth_headers_for(admin)
+        post base_path, params: params, headers: auth_headers_for(admin, organization: organization)
       }.to change(League, :count).by(1)
 
       expect(response).to have_http_status(:created)

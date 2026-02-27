@@ -1,8 +1,11 @@
 module Api
   module V1
+    class OrganizationRequiredError < StandardError; end
+
     class BaseController < ActionController::API
       include Doorkeeper::Helpers::Controller
       include CanCan::ControllerAdditions
+      include Pagination
 
       before_action :set_default_format
       before_action :doorkeeper_authorize!
@@ -23,6 +26,14 @@ module Api
         )
       end
 
+      rescue_from OrganizationRequiredError do |exception|
+        render_jsonapi_error(
+          title: "Organization required",
+          detail: exception.message,
+          status: :bad_request
+        )
+      end
+
       private
 
       def current_ability
@@ -31,7 +42,7 @@ module Api
 
       def current_organization_if_present
         current_organization
-      rescue ActiveRecord::RecordNotFound
+      rescue OrganizationRequiredError, ActiveRecord::RecordNotFound, CanCan::AccessDenied
         nil
       end
 
@@ -74,15 +85,38 @@ module Api
       end
 
       def current_organization
-        @current_organization ||= if params[:organization_slug] || params[:slug]
-          Organization.find_by!(slug: params[:organization_slug] || params[:slug])
+        return @current_organization if defined?(@current_organization)
+
+        header = request.headers["X-Org-Id"]
+
+        @current_organization = if header.present?
+          org = Organization.find_by(slug: header) || Organization.find(header)
+          authorize_organization_membership!(org)
+          org
         else
-          derive_organization
+          infer_organization
         end
       end
 
-      def derive_organization
-        nil
+      def infer_organization
+        return nil unless current_user
+
+        memberships = current_user.organization_memberships.includes(:organization)
+        case memberships.size
+        when 0 then nil
+        when 1
+          memberships.first.organization
+        else
+          raise OrganizationRequiredError, "Multiple organizations available. Specify one via the X-Org-Id header."
+        end
+      end
+
+      def authorize_organization_membership!(org)
+        return unless current_user
+
+        unless current_user.organization_memberships.exists?(organization: org)
+          raise CanCan::AccessDenied, "You are not a member of this organization."
+        end
       end
 
       def current_membership

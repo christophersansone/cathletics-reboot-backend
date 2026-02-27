@@ -6,8 +6,7 @@ module Api
 
       def index
         authorize! :read, @family
-        memberships = @family.family_memberships
-        render_models memberships
+        render_paginated @family.family_memberships
       end
 
       def show

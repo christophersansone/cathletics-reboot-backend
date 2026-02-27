@@ -14,7 +14,8 @@ RSpec.describe "Api::V1::Teams" do
 
   describe "GET /api/v1/leagues/:league_id/teams" do
     it "returns teams for the league" do
-      get "/api/v1/leagues/#{league.id}/teams", headers: auth_headers_for(admin)
+      get "/api/v1/leagues/#{league.id}/teams",
+        headers: auth_headers_for(admin, organization: organization)
 
       expect(response).to have_http_status(:ok)
       expect(parsed_body["data"].length).to eq(1)
@@ -26,7 +27,7 @@ RSpec.describe "Api::V1::Teams" do
       expect {
         post "/api/v1/leagues/#{league.id}/teams",
           params: { data: { attributes: { name: "B Team" } } },
-          headers: auth_headers_for(admin)
+          headers: auth_headers_for(admin, organization: organization)
       }.to change(Team, :count).by(1)
 
       expect(response).to have_http_status(:created)

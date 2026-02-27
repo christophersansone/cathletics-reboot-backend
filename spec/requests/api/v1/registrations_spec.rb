@@ -21,7 +21,7 @@ RSpec.describe "Api::V1::Registrations" do
       expect {
         post "/api/v1/leagues/#{league.id}/registrations",
           params: { data: { attributes: { user_id: child.id } } },
-          headers: auth_headers_for(parent)
+          headers: auth_headers_for(parent, organization: organization)
       }.to change(Registration, :count).by(1)
 
       expect(response).to have_http_status(:created)
@@ -49,7 +49,7 @@ RSpec.describe "Api::V1::Registrations" do
 
     it "returns registrations for the league" do
       get "/api/v1/leagues/#{league.id}/registrations",
-        headers: auth_headers_for(admin)
+        headers: auth_headers_for(admin, organization: organization)
 
       expect(response).to have_http_status(:ok)
       expect(parsed_body["data"].length).to eq(1)
@@ -67,7 +67,7 @@ RSpec.describe "Api::V1::Registrations" do
     it "allows admin to confirm a registration" do
       patch "/api/v1/leagues/#{league.id}/registrations/#{registration.id}",
         params: { data: { attributes: { status: "confirmed" } } },
-        headers: auth_headers_for(admin)
+        headers: auth_headers_for(admin, organization: organization)
 
       expect(response).to have_http_status(:ok)
       expect(registration.reload).to be_confirmed
@@ -76,7 +76,7 @@ RSpec.describe "Api::V1::Registrations" do
     it "allows admin to mark as not_selected" do
       patch "/api/v1/leagues/#{league.id}/registrations/#{registration.id}",
         params: { data: { attributes: { status: "not_selected" } } },
-        headers: auth_headers_for(admin)
+        headers: auth_headers_for(admin, organization: organization)
 
       expect(response).to have_http_status(:ok)
       expect(registration.reload).to be_not_selected

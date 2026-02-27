@@ -5,8 +5,7 @@ module Api
       before_action :set_team_membership, only: [:show, :update, :destroy]
 
       def index
-        memberships = @team.team_memberships
-        render_models memberships
+        render_paginated @team.team_memberships
       end
 
       def show
@@ -44,10 +43,6 @@ module Api
 
       def set_team
         @team = Team.find(params[:team_id])
-      end
-
-      def derive_organization
-        @team&.organization
       end
 
       def set_team_membership

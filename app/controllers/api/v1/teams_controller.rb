@@ -5,8 +5,7 @@ module Api
       before_action :set_team, only: [:show, :update, :destroy]
 
       def index
-        teams = @league.teams
-        render_models teams
+        render_paginated @league.teams
       end
 
       def show
@@ -44,10 +43,6 @@ module Api
 
       def set_league
         @league = League.find(params[:league_id])
-      end
-
-      def derive_organization
-        @league&.organization
       end
 
       def set_team

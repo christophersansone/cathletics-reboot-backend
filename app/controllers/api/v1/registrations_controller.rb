@@ -5,8 +5,7 @@ module Api
       before_action :set_registration, only: [:show, :update, :destroy]
 
       def index
-        registrations = @league.registrations
-        render_models registrations
+        render_paginated @league.registrations
       end
 
       def show
@@ -46,10 +45,6 @@ module Api
 
       def set_league
         @league = League.find(params[:league_id])
-      end
-
-      def derive_organization
-        @league&.organization
       end
 
       def set_registration

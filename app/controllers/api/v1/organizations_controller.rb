@@ -5,8 +5,7 @@ module Api
       before_action :set_organization, only: [:show, :update, :destroy]
 
       def index
-        organizations = Organization.all
-        render_models organizations
+        render_paginated Organization.all
       end
 
       def show

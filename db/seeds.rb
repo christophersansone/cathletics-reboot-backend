@@ -4,6 +4,7 @@ puts "Seeding Cathletics..."
 # OAuth Application (first-party Ember client)
 # ---------------------------------------------------------------------------
 app = Doorkeeper::Application.find_or_create_by!(name: "Cathletics Web") do |a|
+  a.uid = "-4F3duvPS4_pfBA-tLYO-TeaJdRs08ovzwEnZilHSjs"
   a.redirect_uri = "urn:ietf:wg:oauth:2.0:oob"
   a.confidential = false
 end

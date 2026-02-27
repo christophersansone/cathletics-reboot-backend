@@ -10,7 +10,7 @@ Doorkeeper.configure do
     user if user&.authenticate(params[:password])
   end
 
-  grant_flows %w[password client_credentials]
+  grant_flows %w[password client_credentials refresh_token]
 
   access_token_expires_in 2.hours
   use_refresh_token

@@ -5,8 +5,7 @@ module Api
       before_action :set_league, only: [:show, :update, :destroy]
 
       def index
-        leagues = @season.leagues
-        render_models leagues
+        render_paginated @season.leagues
       end
 
       def show

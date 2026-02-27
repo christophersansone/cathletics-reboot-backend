@@ -10,17 +10,17 @@ RSpec.describe "Api::V1::Seasons" do
     create(:organization_membership, :admin, user: admin, organization: organization)
   end
 
-  describe "GET /api/v1/organizations/:slug/activity_types/:id/seasons" do
+  describe "GET /api/v1/activity_types/:activity_type_id/seasons" do
     it "returns seasons for the activity type" do
-      get "/api/v1/organizations/#{organization.slug}/activity_types/#{activity_type.id}/seasons",
-        headers: auth_headers_for(admin)
+      get "/api/v1/activity_types/#{activity_type.id}/seasons",
+        headers: auth_headers_for(admin, organization: organization)
 
       expect(response).to have_http_status(:ok)
       expect(parsed_body["data"].length).to eq(1)
     end
   end
 
-  describe "POST /api/v1/organizations/:slug/activity_types/:id/seasons" do
+  describe "POST /api/v1/activity_types/:activity_type_id/seasons" do
     let(:params) do
       {
         data: {
@@ -37,9 +37,9 @@ RSpec.describe "Api::V1::Seasons" do
 
     it "creates a season" do
       expect {
-        post "/api/v1/organizations/#{organization.slug}/activity_types/#{activity_type.id}/seasons",
+        post "/api/v1/activity_types/#{activity_type.id}/seasons",
           params: params,
-          headers: auth_headers_for(admin)
+          headers: auth_headers_for(admin, organization: organization)
       }.to change(Season, :count).by(1)
 
       expect(response).to have_http_status(:created)

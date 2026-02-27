@@ -4,8 +4,7 @@ module Api
       before_action :set_activity_type, only: [:show, :update, :destroy]
 
       def index
-        activity_types = current_organization.activity_types
-        render_models activity_types
+        render_paginated current_organization.activity_types
       end
 
       def show
@@ -42,7 +41,7 @@ module Api
       private
 
       def set_activity_type
-        @activity_type = current_organization.activity_types.find(params[:id])
+        @activity_type = ActivityType.find(params[:id])
       end
 
       def activity_type_params

@@ -4,8 +4,7 @@ module Api
       before_action :set_family, only: [:show, :update, :destroy]
 
       def index
-        families = current_user.families
-        render_models families
+        render_paginated current_user.families
       end
 
       def show

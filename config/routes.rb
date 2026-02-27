@@ -12,6 +12,11 @@ Rails.application.routes.draw do
 
       resources :users
       resources :organization_memberships, only: [:index]
+      resources :activity_types do
+        resources :seasons do
+          resources :leagues
+        end
+      end
       resources :families do
         resources :family_memberships, path: "memberships"
       end

@@ -5,8 +5,7 @@ module Api
       before_action :set_season, only: [:show, :update, :destroy]
 
       def index
-        seasons = @activity_type.seasons
-        render_models seasons
+        render_paginated @activity_type.seasons
       end
 
       def show

@@ -1,7 +1,7 @@
 GIT
   remote: https://github.com/christophersansone/legendary-json-api.git
-  revision: b736123ed11ee4e38e54e79937a76ee1c96e0869
-  tag: v0.1.2
+  revision: 586cee2b4fd60e59efc0259326cc512ec8a274af
+  tag: v0.1.3
   specs:
     legendary_json_api (0.1.0)
 
