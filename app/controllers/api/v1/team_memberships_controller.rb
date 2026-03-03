@@ -1,7 +1,7 @@
 module Api
   module V1
     class TeamMembershipsController < BaseController
-      before_action :set_team
+      before_action :set_team, only: [:index, :create]
       before_action :set_team_membership, only: [:show, :update, :destroy]
 
       def index
@@ -14,6 +14,7 @@ module Api
 
       def create
         membership = @team.team_memberships.new(team_membership_params)
+        membership.user_id ||= params.dig(:data, :relationships, :user, :data, :id)
         authorize! :create, membership
 
         if membership.save
@@ -42,15 +43,17 @@ module Api
       private
 
       def set_team
-        @team = Team.find(params[:team_id])
+        team_id = params[:team_id] ||
+                  params.dig(:data, :relationships, :team, :data, :id)
+        @team = Team.find(team_id)
       end
 
       def set_team_membership
-        @team_membership = @team.team_memberships.find(params[:id])
+        @team_membership = TeamMembership.find(params[:id])
       end
 
       def team_membership_params
-        params.require(:data).require(:attributes).permit(:user_id, :role)
+        params.require(:data).require(:attributes).permit(:role)
       end
     end
   end

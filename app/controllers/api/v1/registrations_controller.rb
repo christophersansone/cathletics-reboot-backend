@@ -1,7 +1,7 @@
 module Api
   module V1
     class RegistrationsController < BaseController
-      before_action :set_league
+      before_action :set_league, only: [:index, :create]
       before_action :set_registration, only: [:show, :update, :destroy]
 
       def index
@@ -15,6 +15,7 @@ module Api
 
       def create
         registration = @league.registrations.new(registration_params)
+        registration.user_id ||= params.dig(:data, :relationships, :user, :data, :id)
         registration.registered_by = current_user
         authorize! :create, registration
 
@@ -44,15 +45,17 @@ module Api
       private
 
       def set_league
-        @league = League.find(params[:league_id])
+        league_id = params[:league_id] ||
+                    params.dig(:data, :relationships, :league, :data, :id)
+        @league = League.find(league_id)
       end
 
       def set_registration
-        @registration = @league.registrations.find(params[:id])
+        @registration = Registration.find(params[:id])
       end
 
       def registration_params
-        params.require(:data).require(:attributes).permit(:user_id, :status)
+        params.require(:data).require(:attributes).permit(:status)
       end
     end
   end

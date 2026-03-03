@@ -1,7 +1,7 @@
 module Api
   module V1
     class TeamsController < BaseController
-      before_action :set_league
+      before_action :set_league, only: [:index, :create]
       before_action :set_team, only: [:show, :update, :destroy]
 
       def index
@@ -42,11 +42,13 @@ module Api
       private
 
       def set_league
-        @league = League.find(params[:league_id])
+        league_id = params[:league_id] ||
+                    params.dig(:data, :relationships, :league, :data, :id)
+        @league = League.find(league_id)
       end
 
       def set_team
-        @team = @league.teams.find(params[:id])
+        @team = Team.find(params[:id])
       end
 
       def team_params

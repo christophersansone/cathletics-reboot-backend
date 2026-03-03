@@ -33,6 +33,10 @@ Rails.application.routes.draw do
         end
       end
 
+      resources :teams
+      resources :registrations
+      resources :team_memberships
+
       resources :leagues, only: [] do
         resources :teams
         resources :registrations
