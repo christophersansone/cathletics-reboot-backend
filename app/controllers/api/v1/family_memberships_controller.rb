@@ -15,7 +15,7 @@ module Api
       end
 
       def create
-        membership = @family.family_memberships.new(family_membership_params)
+        membership = @family.family_memberships.new(create_params)
         authorize! :create, membership
 
         if membership.save
@@ -28,7 +28,7 @@ module Api
       def update
         authorize! :update, @family_membership
 
-        if @family_membership.update(family_membership_params)
+        if @family_membership.update(update_params)
           render_model @family_membership
         else
           render_errors @family_membership
@@ -51,8 +51,12 @@ module Api
         @family_membership = @family.family_memberships.find(params[:id])
       end
 
-      def family_membership_params
-        params.require(:data).require(:attributes).permit(:user_id, :role)
+      def create_params
+        json_api_attributes(:role).merge(json_api_relationships(:user))
+      end
+
+      def update_params
+        json_api_attributes(:role)
       end
     end
   end

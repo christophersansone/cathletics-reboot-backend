@@ -42,8 +42,7 @@ module Api
       private
 
       def set_season
-        season_id = params[:season_id] ||
-                    params.dig(:data, :relationships, :season, :data, :id)
+        season_id = params[:season_id] || json_api_relationships(:season)[:season_id]
         @season = Season.find(season_id)
       end
 
@@ -52,10 +51,7 @@ module Api
       end
 
       def league_params
-        params.require(:data).require(:attributes).permit(
-          :name, :gender, :min_grade, :max_grade,
-          :min_age, :max_age, :age_cutoff_date, :capacity
-        )
+        json_api_attributes(:name, :gender, :min_grade, :max_grade, :min_age, :max_age, :age_cutoff_date, :capacity)
       end
     end
   end

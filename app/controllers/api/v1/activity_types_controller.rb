@@ -45,7 +45,7 @@ module Api
       end
 
       def activity_type_params
-        params.require(:data).require(:attributes).permit(:name, :description)
+        json_api_attributes(:name, :description)
       end
     end
   end

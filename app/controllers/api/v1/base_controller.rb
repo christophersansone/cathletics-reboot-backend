@@ -6,6 +6,7 @@ module Api
       include Doorkeeper::Helpers::Controller
       include CanCan::ControllerAdditions
       include Pagination
+      include JsonApiParams
 
       before_action :set_default_format
       before_action :doorkeeper_authorize!

@@ -16,9 +16,7 @@ module Api
       private
 
       def signup_params
-        params.require(:data).require(:attributes).permit(
-          :first_name, :last_name, :email, :password
-        )
+        json_api_attributes(:first_name, :last_name, :email, :password)
       end
     end
   end

@@ -46,7 +46,7 @@ module Api
       end
 
       def organization_params
-        params.require(:data).require(:attributes).permit(:name, :slug)
+        json_api_attributes(:name, :slug, :time_zone)
       end
     end
   end

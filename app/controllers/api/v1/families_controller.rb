@@ -46,7 +46,7 @@ module Api
       end
 
       def family_params
-        params.require(:data).require(:attributes).permit(:name)
+        json_api_attributes(:name)
       end
     end
   end

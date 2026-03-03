@@ -38,10 +38,7 @@ module Api
       end
 
       def user_params
-        params.require(:data).require(:attributes).permit(
-          :first_name, :last_name, :email, :password, :nickname,
-          :date_of_birth, :grade_level, :gender
-        )
+        json_api_attributes(:first_name, :last_name, :email, :password, :nickname, :date_of_birth, :grade_level, :gender)
       end
 
       def filter_by_search(scope)

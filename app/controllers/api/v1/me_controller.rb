@@ -16,9 +16,7 @@ module Api
       private
 
       def me_params
-        params.require(:data).require(:attributes).permit(
-          :first_name, :last_name, :email, :nickname
-        )
+        json_api_attributes(:first_name, :last_name, :nickname)
       end
     end
   end

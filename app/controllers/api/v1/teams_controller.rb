@@ -42,8 +42,7 @@ module Api
       private
 
       def set_league
-        league_id = params[:league_id] ||
-                    params.dig(:data, :relationships, :league, :data, :id)
+        league_id = params[:league_id] || json_api_relationships(:league)[:league_id]
         @league = League.find(league_id)
       end
 
@@ -52,7 +51,7 @@ module Api
       end
 
       def team_params
-        params.require(:data).require(:attributes).permit(:name)
+        json_api_attributes(:name)
       end
     end
   end

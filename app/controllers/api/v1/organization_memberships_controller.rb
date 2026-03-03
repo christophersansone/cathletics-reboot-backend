@@ -12,7 +12,7 @@ module Api
       end
 
       def create
-        membership = current_organization.organization_memberships.new(organization_membership_params)
+        membership = current_organization.organization_memberships.new(create_params)
         authorize! :create, membership
 
         if membership.save
@@ -25,7 +25,7 @@ module Api
       def update
         authorize! :update, @organization_membership
 
-        if @organization_membership.update(organization_membership_params)
+        if @organization_membership.update(update_params)
           render_model @organization_membership
         else
           render_errors @organization_membership
@@ -44,8 +44,12 @@ module Api
         @organization_membership = current_organization.organization_memberships.find(params[:id])
       end
 
-      def organization_membership_params
-        params.require(:data).require(:attributes).permit(:user_id, :role)
+      def create_params
+        json_api_attributes(:role).merge(json_api_relationships(:user))
+      end
+
+      def update_params
+        json_api_attributes(:role)
       end
     end
   end

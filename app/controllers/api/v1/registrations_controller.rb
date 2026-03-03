@@ -14,8 +14,7 @@ module Api
       end
 
       def create
-        registration = @league.registrations.new(registration_params)
-        registration.user_id ||= params.dig(:data, :relationships, :user, :data, :id)
+        registration = @league.registrations.new(create_params)
         registration.registered_by = current_user
         authorize! :create, registration
 
@@ -29,7 +28,7 @@ module Api
       def update
         authorize! :update, @registration
 
-        if @registration.update(registration_params)
+        if @registration.update(update_params)
           render_model @registration
         else
           render_errors @registration
@@ -45,8 +44,7 @@ module Api
       private
 
       def set_league
-        league_id = params[:league_id] ||
-                    params.dig(:data, :relationships, :league, :data, :id)
+        league_id = params[:league_id] || json_api_relationships(:league)[:league_id]
         @league = League.find(league_id)
       end
 
@@ -54,8 +52,12 @@ module Api
         @registration = Registration.find(params[:id])
       end
 
-      def registration_params
-        params.require(:data).require(:attributes).permit(:status)
+      def create_params
+        json_api_attributes(:status).merge(json_api_relationships(:user))
+      end
+
+      def update_params
+        json_api_attributes(:status)
       end
     end
   end

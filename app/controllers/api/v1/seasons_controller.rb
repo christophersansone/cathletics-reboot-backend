@@ -42,8 +42,7 @@ module Api
       private
 
       def set_activity_type
-        at_id = params[:activity_type_id] ||
-                params.dig(:data, :relationships, :activityType, :data, :id)
+        at_id = params[:activity_type_id] || json_api_relationships(:activity_type)[:activity_type_id]
         @activity_type = current_organization.activity_types.find(at_id)
       end
 
@@ -52,11 +51,7 @@ module Api
       end
 
       def season_params
-        params.require(:data).require(:attributes).permit(
-          :name, :start_date, :end_date,
-          :registration_start_at, :registration_end_at,
-          :time_zone
-        )
+        json_api_attributes(:name, :start_date, :end_date, :registration_start_at, :registration_end_at, :time_zone)
       end
     end
   end

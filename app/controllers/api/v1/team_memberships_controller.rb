@@ -13,8 +13,7 @@ module Api
       end
 
       def create
-        membership = @team.team_memberships.new(team_membership_params)
-        membership.user_id ||= params.dig(:data, :relationships, :user, :data, :id)
+        membership = @team.team_memberships.new(create_params)
         authorize! :create, membership
 
         if membership.save
@@ -27,7 +26,7 @@ module Api
       def update
         authorize! :update, @team_membership
 
-        if @team_membership.update(team_membership_params)
+        if @team_membership.update(update_params)
           render_model @team_membership
         else
           render_errors @team_membership
@@ -43,8 +42,7 @@ module Api
       private
 
       def set_team
-        team_id = params[:team_id] ||
-                  params.dig(:data, :relationships, :team, :data, :id)
+        team_id = params[:team_id] || json_api_relationships(:team)[:team_id]
         @team = Team.find(team_id)
       end
 
@@ -52,8 +50,12 @@ module Api
         @team_membership = TeamMembership.find(params[:id])
       end
 
-      def team_membership_params
-        params.require(:data).require(:attributes).permit(:role)
+      def create_params
+        json_api_attributes(:role).merge(json_api_relationships(:user))
+      end
+
+      def update_params
+        json_api_attributes(:role)
       end
     end
   end
