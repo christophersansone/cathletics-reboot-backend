@@ -1,7 +1,7 @@
 module Api
   module V1
     class SeasonsController < BaseController
-      before_action :set_activity_type
+      before_action :set_activity_type, only: [:index, :create]
       before_action :set_season, only: [:show, :update, :destroy]
 
       def index
@@ -42,17 +42,20 @@ module Api
       private
 
       def set_activity_type
-        @activity_type = current_organization.activity_types.find(params[:activity_type_id])
+        at_id = params[:activity_type_id] ||
+                params.dig(:data, :relationships, :activityType, :data, :id)
+        @activity_type = current_organization.activity_types.find(at_id)
       end
 
       def set_season
-        @season = @activity_type.seasons.find(params[:id])
+        @season = Season.find(params[:id])
       end
 
       def season_params
         params.require(:data).require(:attributes).permit(
           :name, :start_date, :end_date,
-          :registration_start_at, :registration_end_at
+          :registration_start_at, :registration_end_at,
+          :time_zone
         )
       end
     end

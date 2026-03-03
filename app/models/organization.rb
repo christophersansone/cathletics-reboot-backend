@@ -1,5 +1,6 @@
 class Organization < ApplicationRecord
   include SoftDeletable
+  include TimeZoneAware
 
   has_many :organization_memberships, dependent: :destroy
   has_many :members, through: :organization_memberships, source: :user
@@ -9,6 +10,7 @@ class Organization < ApplicationRecord
   validates :slug, presence: true,
                    uniqueness: { conditions: -> { where(deleted_at: nil) } },
                    format: { with: /\A[a-z0-9]+(?:-[a-z0-9]+)*\z/, message: "must be lowercase alphanumeric with hyphens" }
+  validates :time_zone, presence: true
 
   before_validation :generate_slug, on: :create, if: -> { slug.blank? }
 

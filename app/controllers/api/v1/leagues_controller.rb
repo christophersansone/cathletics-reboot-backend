@@ -1,7 +1,7 @@
 module Api
   module V1
     class LeaguesController < BaseController
-      before_action :set_season
+      before_action :set_season, only: [:index, :create]
       before_action :set_league, only: [:show, :update, :destroy]
 
       def index
@@ -42,11 +42,13 @@ module Api
       private
 
       def set_season
-        @season = Season.find(params[:season_id])
+        season_id = params[:season_id] ||
+                    params.dig(:data, :relationships, :season, :data, :id)
+        @season = Season.find(season_id)
       end
 
       def set_league
-        @league = @season.leagues.find(params[:id])
+        @league = League.find(params[:id])
       end
 
       def league_params

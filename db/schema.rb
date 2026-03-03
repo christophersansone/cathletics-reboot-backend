@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_18_000012) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_19_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -126,6 +126,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_18_000012) do
     t.datetime "deleted_at"
     t.string "name", null: false
     t.string "slug", null: false
+    t.string "time_zone", default: "America/New_York", null: false
     t.datetime "updated_at", null: false
     t.index ["deleted_at"], name: "index_organizations_on_deleted_at"
     t.index ["slug"], name: "index_organizations_on_slug", unique: true, where: "(deleted_at IS NULL)"
@@ -155,6 +156,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_18_000012) do
     t.datetime "registration_end_at"
     t.datetime "registration_start_at"
     t.date "start_date"
+    t.string "time_zone"
     t.datetime "updated_at", null: false
     t.index ["activity_type_id", "name"], name: "index_seasons_on_activity_type_id_and_name", unique: true, where: "(deleted_at IS NULL)"
     t.index ["activity_type_id"], name: "index_seasons_on_activity_type_id"

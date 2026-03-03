@@ -1,6 +1,7 @@
 class SeasonSerializer < BaseSerializer
   attributes :name, :start_date, :end_date,
-             :registration_start_at, :registration_end_at
+             :registration_start_at, :registration_end_at,
+             :time_zone, :effective_time_zone
 
   attribute :registration_open do |season|
     season.registration_open?

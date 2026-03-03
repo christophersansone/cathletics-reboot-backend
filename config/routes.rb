@@ -12,6 +12,9 @@ Rails.application.routes.draw do
 
       resources :users
       resources :organization_memberships, only: [:index]
+      resources :seasons
+      resources :leagues
+
       resources :activity_types do
         resources :seasons do
           resources :leagues

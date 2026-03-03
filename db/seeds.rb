@@ -107,10 +107,12 @@ puts "  Created #{Family.count} families with #{FamilyMembership.count} membersh
 # ---------------------------------------------------------------------------
 st_marys = Organization.find_or_create_by!(slug: "st-marys-academy") do |o|
   o.name = "St. Mary's Academy"
+  o.time_zone = "America/Chicago"
 end
 
 st_josephs = Organization.find_or_create_by!(slug: "st-josephs-school") do |o|
   o.name = "St. Joseph's School"
+  o.time_zone = "America/New_York"
 end
 
 puts "  Created #{Organization.count} organizations"
