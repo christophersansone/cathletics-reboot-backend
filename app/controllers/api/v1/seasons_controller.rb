@@ -15,7 +15,7 @@ module Api
       end
 
       def create
-        season = @activity_type.seasons.new(season_params)
+        season = Season.new(season_params)
         authorize! :create, season
 
         if season.save

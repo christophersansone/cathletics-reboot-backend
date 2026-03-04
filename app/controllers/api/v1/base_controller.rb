@@ -56,15 +56,15 @@ module Api
       end
 
       def render_model(model, **options)
-        render json: LegendaryJsonApi::Document.render_model(model, **options), status: status
+        render json: LegendaryJsonApi::Document.render_model(model, **options), status: :ok
       end
 
       def render_created_model(model, **options)
-        render json: LegendaryJsonApi::Document.render_model(model, **options), status: status
+        render json: LegendaryJsonApi::Document.render_model(model, **options), status: :created
       end
 
       def render_models(models, **options)
-        render json: LegendaryJsonApi::Document.render_models(models, **options), status: status
+        render json: LegendaryJsonApi::Document.render_models(models, **options), status: :ok
       end
 
       def render_errors(model, status: :unprocessable_entity)
