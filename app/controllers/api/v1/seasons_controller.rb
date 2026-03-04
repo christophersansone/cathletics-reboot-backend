@@ -19,7 +19,7 @@ module Api
         authorize! :create, season
 
         if season.save
-          render_model season, status: :created
+          render_created_model season
         else
           render_errors season
         end

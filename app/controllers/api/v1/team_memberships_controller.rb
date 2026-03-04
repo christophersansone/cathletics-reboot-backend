@@ -6,12 +6,12 @@ module Api
 
       def index
         authorize! :read, @team
-        render_paginated @team.team_memberships
+        render_paginated @team.team_memberships, **render_params
       end
 
       def show
         authorize! :read, @team_membership
-        render_model @team_membership
+        render_model @team_membership, **render_params
       end
 
       def create
@@ -19,7 +19,7 @@ module Api
         authorize! :create, membership
 
         if membership.save
-          render_model membership, status: :created
+          render_created_model membership, **render_params
         else
           render_errors membership
         end
@@ -29,7 +29,7 @@ module Api
         authorize! :update, @team_membership
 
         if @team_membership.update(update_params)
-          render_model @team_membership
+          render_model @team_membership, **render_params
         else
           render_errors @team_membership
         end
@@ -57,6 +57,10 @@ module Api
 
       def update_params
         json_api_attributes(:role)
+      end
+
+      def render_params
+        { included: [ :team, :user ] }
       end
     end
   end

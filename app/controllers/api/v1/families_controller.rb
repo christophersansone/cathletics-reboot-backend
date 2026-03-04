@@ -17,7 +17,7 @@ module Api
 
         if family.save
           family.family_memberships.create!(user: current_user, role: :parent)
-          render_model family, status: :created
+          render_created_model family
         else
           render_errors family
         end

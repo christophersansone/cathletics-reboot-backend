@@ -55,11 +55,15 @@ module Api
         @current_user ||= User.find(doorkeeper_token.resource_owner_id) if doorkeeper_token&.resource_owner_id
       end
 
-      def render_model(model, status: :ok, **options)
+      def render_model(model, **options)
         render json: LegendaryJsonApi::Document.render_model(model, **options), status: status
       end
 
-      def render_models(models, status: :ok, **options)
+      def render_created_model(model, **options)
+        render json: LegendaryJsonApi::Document.render_model(model, **options), status: status
+      end
+
+      def render_models(models, **options)
         render json: LegendaryJsonApi::Document.render_models(models, **options), status: status
       end
 

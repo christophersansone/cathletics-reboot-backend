@@ -8,7 +8,7 @@ module Api
       end
 
       def show
-        authorize! :read, activity_type
+        authorize! :read, @activity_type
         render_model @activity_type
       end
 
@@ -17,7 +17,7 @@ module Api
         authorize! :create, activity_type
 
         if activity_type.save
-          render_model activity_type, status: :created
+          render_created_model activity_type
         else
           render_errors activity_type
         end

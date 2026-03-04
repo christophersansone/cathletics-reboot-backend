@@ -4,12 +4,12 @@ module Api
       before_action :set_organization_membership, only: [:show, :update, :destroy]
 
       def index
-        render_paginated current_user.organization_memberships.includes(:organization)
+        render_paginated current_user.organization_memberships, **render_params
       end
 
       def show
         authorize! :read, @organization_membership
-        render_model @organization_membership
+        render_model @organization_membership, **render_params
       end
 
       def create
@@ -17,7 +17,7 @@ module Api
         authorize! :create, membership
 
         if membership.save
-          render_model membership, status: :created
+          render_created_model membership, **render_params
         else
           render_errors membership
         end
@@ -27,7 +27,7 @@ module Api
         authorize! :update, @organization_membership
 
         if @organization_membership.update(update_params)
-          render_model @organization_membership
+          render_model @organization_membership, **render_params
         else
           render_errors @organization_membership
         end
@@ -51,6 +51,10 @@ module Api
 
       def update_params
         json_api_attributes(:role)
+      end
+
+      def render_params
+        { included: [ :organization, :user ] }
       end
     end
   end

@@ -6,12 +6,12 @@ module Api
 
       def index
         authorize! :read, @league
-        render_paginated @league.registrations
+        render_paginated @league.registrations, **render_params
       end
 
       def show
         authorize! :read, @registration
-        render_model @registration
+        render_model @registration, **render_params
       end
 
       def create
@@ -20,7 +20,7 @@ module Api
         authorize! :create, registration
 
         if registration.save
-          render_model registration, status: :created
+          render_created_model registration, **render_params
         else
           render_errors registration
         end
@@ -30,7 +30,7 @@ module Api
         authorize! :update, @registration
 
         if @registration.update(update_params)
-          render_model @registration
+          render_model @registration, **render_params
         else
           render_errors @registration
         end
@@ -58,6 +58,10 @@ module Api
 
       def update_params
         json_api_attributes(:status)
+      end
+
+      def render_params
+        { included: [:user, :registered_by, :league] }
       end
     end
   end

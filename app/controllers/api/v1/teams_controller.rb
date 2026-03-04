@@ -6,12 +6,12 @@ module Api
 
       def index
         authorize! :read, @league
-        render_paginated @league.teams
+        render_paginated @league.teams, **render_params
       end
 
       def show
         authorize! :read, @team
-        render_model @team
+        render_model @team, **render_params
       end
 
       def create
@@ -19,7 +19,7 @@ module Api
         authorize! :create, team
 
         if team.save
-          render_model team, status: :created
+          render_created_model team, **render_params
         else
           render_errors team
         end
@@ -29,7 +29,7 @@ module Api
         authorize! :update, @team
 
         if @team.update(team_params)
-          render_model @team
+          render_model @team, **render_params
         else
           render_errors @team
         end
@@ -53,6 +53,10 @@ module Api
 
       def team_params
         json_api_attributes(:name).merge(json_api_relationships(:league))
+      end
+
+      def render_params
+        { included: { league: :season } }
       end
     end
   end
