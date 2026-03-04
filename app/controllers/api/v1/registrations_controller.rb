@@ -1,10 +1,11 @@
 module Api
   module V1
     class RegistrationsController < BaseController
-      before_action :set_league, only: [:index, :create]
+      before_action :set_league, only: [:index]
       before_action :set_registration, only: [:show, :update, :destroy]
 
       def index
+        authorize! :read, @league
         render_paginated @league.registrations
       end
 
@@ -14,7 +15,7 @@ module Api
       end
 
       def create
-        registration = @league.registrations.new(create_params)
+        registration = Registration.new(create_params)
         registration.registered_by = current_user
         authorize! :create, registration
 
@@ -44,8 +45,7 @@ module Api
       private
 
       def set_league
-        league_id = params[:league_id] || json_api_relationships(:league)[:league_id]
-        @league = League.find(league_id)
+        @league = League.find(params[:league_id])
       end
 
       def set_registration
@@ -53,7 +53,7 @@ module Api
       end
 
       def create_params
-        json_api_attributes(:status).merge(json_api_relationships(:user))
+        json_api_attributes(:status).merge(json_api_relationships(:user, :league))
       end
 
       def update_params

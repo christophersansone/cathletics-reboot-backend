@@ -1,19 +1,21 @@
 module Api
   module V1
     class TeamsController < BaseController
-      before_action :set_league, only: [:index, :create]
+      before_action :set_league, only: [:index]
       before_action :set_team, only: [:show, :update, :destroy]
 
       def index
+        authorize! :read, @league
         render_paginated @league.teams
       end
 
       def show
+        authorize! :read, @team
         render_model @team
       end
 
       def create
-        team = @league.teams.new(team_params)
+        team = Team.new(team_params)
         authorize! :create, team
 
         if team.save
@@ -42,8 +44,7 @@ module Api
       private
 
       def set_league
-        league_id = params[:league_id] || json_api_relationships(:league)[:league_id]
-        @league = League.find(league_id)
+        @league = League.find(params[:league_id])
       end
 
       def set_team
@@ -51,7 +52,7 @@ module Api
       end
 
       def team_params
-        json_api_attributes(:name)
+        json_api_attributes(:name).merge(json_api_relationships(:league))
       end
     end
   end

@@ -1,19 +1,21 @@
 module Api
   module V1
     class TeamMembershipsController < BaseController
-      before_action :set_team, only: [:index, :create]
+      before_action :set_team, only: [:index]
       before_action :set_team_membership, only: [:show, :update, :destroy]
 
       def index
+        authorize! :read, @team
         render_paginated @team.team_memberships
       end
 
       def show
+        authorize! :read, @team_membership
         render_model @team_membership
       end
 
       def create
-        membership = @team.team_memberships.new(create_params)
+        membership = TeamMembership.new(create_params)
         authorize! :create, membership
 
         if membership.save
@@ -42,8 +44,7 @@ module Api
       private
 
       def set_team
-        team_id = params[:team_id] || json_api_relationships(:team)[:team_id]
-        @team = Team.find(team_id)
+        @team = Team.find(params[:team_id])
       end
 
       def set_team_membership
@@ -51,7 +52,7 @@ module Api
       end
 
       def create_params
-        json_api_attributes(:role).merge(json_api_relationships(:user))
+        json_api_attributes(:role).merge(json_api_relationships(:user, :team))
       end
 
       def update_params

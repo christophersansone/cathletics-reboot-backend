@@ -1,14 +1,16 @@
 module Api
   module V1
     class SeasonsController < BaseController
-      before_action :set_activity_type, only: [:index, :create]
+      before_action :set_activity_type, only: [:index]
       before_action :set_season, only: [:show, :update, :destroy]
 
       def index
+        authorize! :read, @activity_type
         render_paginated @activity_type.seasons
       end
 
       def show
+        authorize! :read, @season
         render_model @season
       end
 
@@ -42,8 +44,7 @@ module Api
       private
 
       def set_activity_type
-        at_id = params[:activity_type_id] || json_api_relationships(:activity_type)[:activity_type_id]
-        @activity_type = current_organization.activity_types.find(at_id)
+        @activity_type = current_organization.activity_types.find(params[:activity_type_id])
       end
 
       def set_season
@@ -51,7 +52,7 @@ module Api
       end
 
       def season_params
-        json_api_attributes(:name, :start_date, :end_date, :registration_start_at, :registration_end_at, :time_zone)
+        json_api_attributes(:name, :start_date, :end_date, :registration_start_at, :registration_end_at, :time_zone).merge(json_api_relationships(:activity_type))
       end
     end
   end

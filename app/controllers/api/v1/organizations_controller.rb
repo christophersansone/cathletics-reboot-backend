@@ -9,6 +9,7 @@ module Api
       end
 
       def show
+        authorize! :read, @organization
         render_model @organization
       end
 

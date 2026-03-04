@@ -1,10 +1,11 @@
 module Api
   module V1
     class LeaguesController < BaseController
-      before_action :set_season, only: [:index, :create]
+      before_action :set_season, only: [:index]
       before_action :set_league, only: [:show, :update, :destroy]
 
       def index
+        authorize! :read, @season
         render_paginated @season.leagues
       end
 
@@ -13,7 +14,7 @@ module Api
       end
 
       def create
-        league = @season.leagues.new(league_params)
+        league = League.new(league_params)
         authorize! :create, league
 
         if league.save
@@ -42,8 +43,7 @@ module Api
       private
 
       def set_season
-        season_id = params[:season_id] || json_api_relationships(:season)[:season_id]
-        @season = Season.find(season_id)
+        @season = Season.find(params[:season_id])
       end
 
       def set_league
@@ -51,7 +51,7 @@ module Api
       end
 
       def league_params
-        json_api_attributes(:name, :gender, :min_grade, :max_grade, :min_age, :max_age, :age_cutoff_date, :capacity)
+        json_api_attributes(:name, :gender, :min_grade, :max_grade, :min_age, :max_age, :age_cutoff_date, :capacity).merge(json_api_relationships(:season))
       end
     end
   end

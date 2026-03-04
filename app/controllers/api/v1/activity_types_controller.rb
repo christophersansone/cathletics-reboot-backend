@@ -8,6 +8,7 @@ module Api
       end
 
       def show
+        authorize! :read, activity_type
         render_model @activity_type
       end
 
