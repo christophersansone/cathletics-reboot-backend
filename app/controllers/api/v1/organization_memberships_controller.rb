@@ -4,7 +4,11 @@ module Api
       before_action :set_organization_membership, only: [:show, :update, :destroy]
 
       def index
-        render_paginated current_user.organization_memberships, **render_params
+        memberships = current_organization.organization_memberships.includes(:user)
+        memberships = filter_by_user(memberships)
+        memberships = filter_by_search(memberships)
+        authorize! :read_members, current_organization
+        render_paginated memberships, **render_params
       end
 
       def show
@@ -45,6 +49,22 @@ module Api
         @organization_membership = current_organization.organization_memberships.find(params[:id])
       end
 
+      def filter_by_user(scope)
+        return scope unless params[:user_id].present?
+
+        scope.where(user_id: params[:user_id])
+      end
+
+      def filter_by_search(scope)
+        return scope unless params[:q].present?
+
+        q = "%#{params[:q]}%"
+        scope.joins(:user).where(
+          "users.first_name ILIKE :q OR users.last_name ILIKE :q OR CONCAT(users.first_name, ' ', users.last_name) ILIKE :q",
+          q: q
+        )
+      end
+
       def create_params
         json_api_attributes(:role).merge(json_api_relationships(:user))
       end
@@ -54,7 +74,7 @@ module Api
       end
 
       def render_params
-        { included: [ :organization, :user ] }
+        { included: [:organization, :user] }
       end
     end
   end

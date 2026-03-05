@@ -9,6 +9,7 @@ Rails.application.routes.draw do
     namespace :v1 do
       resource :signup, only: [:create], controller: "signup"
       resource :me, only: [:show, :update], controller: "me"
+      resource :dashboard, only: [:show], controller: "dashboard"
 
       resources :users
       resources :organization_memberships, only: [:index]

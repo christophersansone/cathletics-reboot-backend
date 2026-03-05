@@ -53,6 +53,7 @@ class Ability
 
   def define_admin_abilities
     can :manage, Organization, id: organization.id
+    can :read_members, Organization, id: organization.id
     can :manage, OrganizationMembership, organization_id: organization.id
     can :manage, ActivityType, organization_id: organization.id
     can :manage, Season, activity_type: { organization_id: organization.id }
