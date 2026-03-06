@@ -23,9 +23,13 @@ Rails.application.routes.draw do
       end
       resources :families do
         resources :family_memberships, path: "memberships"
+        resources :children, only: [:create]
       end
+      resources :family_memberships
+      resources :children, only: [:create]
 
       resources :organizations, param: :slug do
+        post :join, on: :member
         resources :organization_memberships, path: "memberships"
         resources :activity_types do
           resources :seasons do

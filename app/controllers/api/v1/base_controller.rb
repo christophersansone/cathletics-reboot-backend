@@ -27,6 +27,10 @@ module Api
         )
       end
 
+      rescue_from ActiveRecord::RecordInvalid do |exception|
+        render_errors(exception.record)
+      end
+
       rescue_from OrganizationRequiredError do |exception|
         render_jsonapi_error(
           title: "Organization required",

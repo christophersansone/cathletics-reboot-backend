@@ -1,7 +1,7 @@
 module Api
   module V1
     class FamilyMembershipsController < BaseController
-      before_action :set_family
+      before_action :set_family, only: [:index]
       before_action :set_family_membership, only: [:show, :update, :destroy]
 
       def index
@@ -15,7 +15,7 @@ module Api
       end
 
       def create
-        membership = @family.family_memberships.new(create_params)
+        membership = FamilyMembership.new(create_params)
         authorize! :create, membership
 
         if membership.save
@@ -48,11 +48,11 @@ module Api
       end
 
       def set_family_membership
-        @family_membership = @family.family_memberships.find(params[:id])
+        @family_membership = FamilyMembership.find(params[:id])
       end
 
       def create_params
-        json_api_attributes(:role).merge(json_api_relationships(:user))
+        json_api_attributes(:role).merge(json_api_relationships(:user, :family))
       end
 
       def update_params
@@ -60,7 +60,7 @@ module Api
       end
 
       def render_params
-        { included: [ :family, :user ] }
+        { included: [:family, :user] }
       end
     end
   end

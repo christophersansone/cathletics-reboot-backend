@@ -2,7 +2,7 @@ module Api
   module V1
     class OrganizationsController < BaseController
       skip_before_action :doorkeeper_authorize!, only: [:index, :show]
-      before_action :set_organization, only: [:show, :update, :destroy]
+      before_action :set_organization, only: [:show, :update, :destroy, :join]
 
       def index
         render_paginated Organization.all
@@ -40,6 +40,16 @@ module Api
         head :no_content
       end
 
+      def join
+        existing = @organization.organization_memberships.find_by(user: current_user)
+        if existing
+          render_model existing, **join_render_params
+        else
+          membership = @organization.organization_memberships.create!(user: current_user, role: :member)
+          render_created_model membership, **join_render_params
+        end
+      end
+
       private
 
       def set_organization
@@ -48,6 +58,10 @@ module Api
 
       def organization_params
         json_api_attributes(:name, :slug, :time_zone)
+      end
+
+      def join_render_params
+        { included: [:organization, :user] }
       end
     end
   end

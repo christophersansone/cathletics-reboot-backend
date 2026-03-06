@@ -4,15 +4,14 @@ module Api
       before_action :set_family, only: [:show, :update, :destroy]
 
       def index
-        families = org_scoped_families
-        families = filter_by_user(families)
+        families = base_scope
         families = filter_by_search(families)
-        render_paginated families, **render_params
+        render_paginated families
       end
 
       def show
         authorize! :read, @family
-        render_model @family, **render_params
+        render_model @family
       end
 
       def create
@@ -20,7 +19,7 @@ module Api
 
         if family.save
           family.family_memberships.create!(user: current_user, role: :parent)
-          render_created_model family, **render_params
+          render_created_model family
         else
           render_errors family
         end
@@ -30,7 +29,7 @@ module Api
         authorize! :update, @family
 
         if @family.update(family_params)
-          render_model @family, **render_params
+          render_model @family
         else
           render_errors @family
         end
@@ -48,19 +47,23 @@ module Api
         @family = Family.find(params[:id])
       end
 
-      def org_scoped_families
-        member_ids = current_organization.members.select(:id)
-        Family.where(
-          id: FamilyMembership.where(user_id: member_ids).where(deleted_at: nil).select(:family_id)
-        )
+      def base_scope
+        if params[:user_id].present?
+          user_scoped_families
+        else
+          org_scoped_families
+        end
       end
 
-      def filter_by_user(scope)
-        return scope unless params[:user_id].present?
+      def user_scoped_families
+        target_user = User.find(params[:user_id])
+        authorize! :read, target_user
+        Family.joins(:family_memberships).merge(FamilyMembership.where(user_id: target_user.id)).distinct
+      end
 
-        scope.where(
-          id: FamilyMembership.where(user_id: params[:user_id]).where(deleted_at: nil).select(:family_id)
-        )
+      def org_scoped_families
+        authorize! :read_members, current_organization
+        Family.joins(family_memberships: { user: :organization_memberships }).where(organization_memberships: { organization_id: current_organization.id }).distinct
       end
 
       def filter_by_search(scope)
@@ -73,9 +76,6 @@ module Api
         json_api_attributes(:name)
       end
 
-      def render_params
-        { included: { family_memberships: :user } }
-      end
     end
   end
 end

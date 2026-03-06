@@ -65,8 +65,7 @@ module Api
           end
         end
 
-        already_registered = Registration.where(league: league).where(deleted_at: nil).select(:user_id)
-        scope = scope.where.not(id: already_registered)
+        scope = scope.where.not(id: Registration.where(league: league).select(:user_id))
 
         scope
       end
