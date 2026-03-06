@@ -56,7 +56,7 @@ module Api
       end
 
       def render_params
-        { included: { league: :season } }
+        { included: { league: { season: { activity_type: :organization } } } }
       end
     end
   end

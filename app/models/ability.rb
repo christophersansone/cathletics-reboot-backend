@@ -37,6 +37,11 @@ class Ability
     can :create, Registration, user_id: child_ids
     can :read, Registration, user_id: [user.id] + child_ids
     can [:cancel], Registration, registered_by_id: user.id
+
+    participant_ids = ([user.id] + child_ids).uniq
+    team_ids = TeamMembership.where(user_id: participant_ids).pluck(:team_id)
+    can :read, Team, id: team_ids
+    can :read, TeamMembership, team_id: team_ids
   end
 
   def define_organization_abilities

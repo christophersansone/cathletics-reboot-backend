@@ -10,6 +10,7 @@ Rails.application.routes.draw do
       resource :signup, only: [:create], controller: "signup"
       resource :me, only: [:show, :update], controller: "me"
       resource :dashboard, only: [:show], controller: "dashboard"
+      resource :home, only: [:show], controller: "home"
 
       resources :users
       resources :organization_memberships, only: [:index]

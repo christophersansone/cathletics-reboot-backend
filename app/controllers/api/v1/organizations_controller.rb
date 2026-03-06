@@ -5,7 +5,11 @@ module Api
       before_action :set_organization, only: [:show, :update, :destroy, :join]
 
       def index
-        render_paginated Organization.all
+        if params[:slug]
+          render_model Organization.find_by!(slug: params[:slug])
+        else
+          render_paginated Organization.all
+        end
       end
 
       def show
