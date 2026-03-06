@@ -1,7 +1,7 @@
 class FamilyMembership < ApplicationRecord
   include SoftDeletable
 
-  enum :role, { parent: 0, guardian: 1, child: 2 }
+  enum :role, { parent: 0, guardian: 1, child: 2, viewer: 3 }
 
   belongs_to :family
   belongs_to :user

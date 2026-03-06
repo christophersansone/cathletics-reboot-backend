@@ -7,7 +7,7 @@ module Api
         user = User.new(signup_params)
 
         if user.save
-          render_model user, status: :created
+          render_created_model user
         else
           render_errors user
         end

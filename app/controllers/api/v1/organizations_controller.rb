@@ -18,7 +18,7 @@ module Api
         authorize! :create, organization
 
         if organization.save
-          render_model organization, status: :created
+          render_created_model organization
         else
           render_errors organization
         end

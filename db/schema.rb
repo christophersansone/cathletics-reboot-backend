@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_19_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_03_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -32,6 +32,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_19_000001) do
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.index ["deleted_at"], name: "index_families_on_deleted_at"
+  end
+
+  create_table "family_invitations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.datetime "deleted_at"
+    t.datetime "expires_at"
+    t.bigint "family_id", null: false
+    t.integer "role", null: false
+    t.string "token", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_family_invitations_on_created_by_id"
+    t.index ["deleted_at"], name: "index_family_invitations_on_deleted_at"
+    t.index ["family_id"], name: "index_family_invitations_on_family_id"
+    t.index ["token"], name: "index_family_invitations_on_token", unique: true, where: "(deleted_at IS NULL)"
   end
 
   create_table "family_memberships", force: :cascade do |t|
@@ -203,6 +218,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_19_000001) do
   end
 
   add_foreign_key "activity_types", "organizations"
+  add_foreign_key "family_invitations", "families"
+  add_foreign_key "family_invitations", "users", column: "created_by_id"
   add_foreign_key "family_memberships", "families"
   add_foreign_key "family_memberships", "users"
   add_foreign_key "leagues", "seasons"

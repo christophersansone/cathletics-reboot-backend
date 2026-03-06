@@ -2,6 +2,7 @@ class Family < ApplicationRecord
   include SoftDeletable
 
   has_many :family_memberships, dependent: :destroy
+  has_many :family_invitations, dependent: :destroy
   has_many :members, through: :family_memberships, source: :user
   has_many :parents, -> { joins(:family_memberships).where(family_memberships: { role: [:parent, :guardian] }) },
            through: :family_memberships, source: :user

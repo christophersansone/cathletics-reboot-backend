@@ -27,6 +27,9 @@ Rails.application.routes.draw do
       end
       resources :family_memberships
       resources :children, only: [:create]
+      resources :family_invitations, only: [:index, :show, :create, :destroy] do
+        post :accept, on: :member
+      end
 
       resources :organizations, param: :slug do
         post :join, on: :member

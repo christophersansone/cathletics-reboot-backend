@@ -28,6 +28,7 @@ class Ability
     family_ids = user.family_memberships.where(role: [:parent, :guardian]).pluck(:family_id)
 
     can :manage, FamilyMembership, family_id: family_ids
+    can :manage, FamilyInvitation, family_id: family_ids
     can :update, Family, id: family_ids
 
     child_ids = FamilyMembership.where(family_id: family_ids, role: :child).pluck(:user_id)
