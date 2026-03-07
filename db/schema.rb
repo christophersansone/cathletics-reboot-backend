@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_03_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_06_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -181,8 +181,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_03_000001) do
   create_table "team_memberships", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "deleted_at"
+    t.string "position"
     t.integer "role", default: 0, null: false
     t.bigint "team_id", null: false
+    t.string "uniform_number"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["deleted_at"], name: "index_team_memberships_on_deleted_at"

@@ -52,11 +52,11 @@ module Api
       end
 
       def create_params
-        json_api_attributes(:role).merge(json_api_relationships(:user, :team))
+        json_api_attributes(:role, :uniform_number, :position).merge(json_api_relationships(:user, :team))
       end
 
       def update_params
-        json_api_attributes(:role)
+        json_api_attributes(:role, :uniform_number, :position)
       end
 
       def render_params
