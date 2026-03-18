@@ -12,6 +12,7 @@ class Team < ApplicationRecord
            through: :team_memberships, source: :user
   has_many :coaches, -> { joins(:team_memberships).where(team_memberships: { role: [:coach, :assistant_coach] }) },
            through: :team_memberships, source: :user
+  has_many :scheduled_events, as: :schedulable, dependent: :destroy
 
   validates :name, presence: true
 end

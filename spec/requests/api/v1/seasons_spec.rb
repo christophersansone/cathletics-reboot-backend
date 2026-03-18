@@ -30,6 +30,9 @@ RSpec.describe "Api::V1::Seasons" do
             end_date: "2027-05-31",
             registration_start_at: "2027-01-15T08:00:00Z",
             registration_end_at: "2027-02-28T23:59:59Z"
+          },
+          relationships: {
+            activity_type: { data: { type: "activity_types", id: activity_type.id.to_s } }
           }
         }
       }

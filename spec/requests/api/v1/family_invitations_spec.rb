@@ -74,7 +74,7 @@ RSpec.describe "Api::V1::FamilyInvitations" do
 
       expect(response).to have_http_status(:ok)
       included_types = parsed_body["included"]&.map { |i| i["type"] } || []
-      expect(included_types).to include("families")
+      expect(included_types).to include("family")
     end
 
     it "returns 404 for an invalid token" do
@@ -223,7 +223,7 @@ RSpec.describe "Api::V1::FamilyInvitations" do
         headers: auth_headers_for(other_user)
 
       included_types = parsed_body["included"]&.map { |i| i["type"] } || []
-      expect(included_types).to include("families", "users")
+      expect(included_types).to include("family", "user")
     end
 
     it "returns 404 for an invalid token" do

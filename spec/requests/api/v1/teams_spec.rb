@@ -26,7 +26,12 @@ RSpec.describe "Api::V1::Teams" do
     it "creates a team" do
       expect {
         post "/api/v1/leagues/#{league.id}/teams",
-          params: { data: { attributes: { name: "B Team" } } },
+          params: {
+            data: {
+              attributes: { name: "B Team" },
+              relationships: { league: { data: { type: "leagues", id: league.id.to_s } } }
+            }
+          },
           headers: auth_headers_for(admin, organization: organization)
       }.to change(Team, :count).by(1)
 

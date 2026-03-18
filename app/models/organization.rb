@@ -5,6 +5,9 @@ class Organization < ApplicationRecord
   has_many :organization_memberships, dependent: :destroy
   has_many :members, through: :organization_memberships, source: :user
   has_many :activity_types, dependent: :destroy
+  has_many :seasons, through: :activity_types
+  has_many :leagues, through: :seasons
+  has_many :teams, through: :leagues
 
   validates :name, presence: true
   validates :slug, presence: true,

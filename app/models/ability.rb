@@ -66,6 +66,7 @@ class Ability
     can :manage, League, season: { activity_type: { organization_id: organization.id } }
     can :manage, Team, league: { season: { activity_type: { organization_id: organization.id } } }
     can :manage, TeamMembership, team: { league: { season: { activity_type: { organization_id: organization.id } } } }
+    can :manage, ScheduledEvent, schedulable_type: "Team", schedulable_id: organization.team_ids
     can :manage, Registration, league: { season: { activity_type: { organization_id: organization.id } } }
   end
 
@@ -76,6 +77,7 @@ class Ability
     can :read, League, season: { activity_type: { organization_id: organization.id } }
     can :read, Team, league: { season: { activity_type: { organization_id: organization.id } } }
     can :read, TeamMembership, team: { league: { season: { activity_type: { organization_id: organization.id } } } }
+    can :read, ScheduledEvent, schedulable_type: "Team", schedulable_id: organization.team_ids
 
     can :create, Registration
   end
@@ -86,6 +88,7 @@ class Ability
 
     can :read, Team, id: coached_team_ids
     can :manage, TeamMembership, team_id: coached_team_ids
+    can :manage, ScheduledEvent, schedulable_type: "Team", schedulable_id: coached_team_ids
     can :read, Registration, league_id: Team.where(id: coached_team_ids).pluck(:league_id)
   end
 end

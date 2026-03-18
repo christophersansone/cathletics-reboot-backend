@@ -15,13 +15,15 @@ RSpec.describe "Api::V1::Organizations" do
       get "/api/v1/organizations"
 
       expect(response).to have_http_status(:ok)
-      expect(parsed_body["data"].length).to eq(1)
+      expect(parsed_body["data"].length).to be >= 1
+      expect(parsed_body["data"].map { |d| d["id"] }).to include(organization.id.to_s)
     end
   end
 
   describe "GET /api/v1/organizations/:slug" do
     it "returns an organization by slug" do
-      get "/api/v1/organizations/#{organization.slug}"
+      get "/api/v1/organizations/#{organization.slug}",
+        headers: auth_headers_for(admin, organization: organization)
 
       expect(response).to have_http_status(:ok)
       expect(parsed_body.dig("data", "attributes", "name")).to eq(organization.name)

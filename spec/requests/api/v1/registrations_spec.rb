@@ -20,7 +20,15 @@ RSpec.describe "Api::V1::Registrations" do
     it "allows a parent to register their child" do
       expect {
         post "/api/v1/leagues/#{league.id}/registrations",
-          params: { data: { attributes: { user_id: child.id } } },
+          params: {
+            data: {
+              attributes: { status: "pending" },
+              relationships: {
+                user: { data: { type: "users", id: child.id.to_s } },
+                league: { data: { type: "leagues", id: league.id.to_s } }
+              }
+            }
+          },
           headers: auth_headers_for(parent, organization: organization)
       }.to change(Registration, :count).by(1)
 

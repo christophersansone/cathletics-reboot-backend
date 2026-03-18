@@ -32,8 +32,8 @@ RSpec.describe Organization do
     end
 
     it "accepts valid slug formats" do
-      expect(build(:organization, slug: "st-marys-academy")).to be_valid
-      expect(build(:organization, slug: "school123")).to be_valid
+      expect(build(:organization, slug: "st-marys-academy-#{SecureRandom.hex(4)}")).to be_valid
+      expect(build(:organization, slug: "school123-#{SecureRandom.hex(4)}")).to be_valid
     end
   end
 

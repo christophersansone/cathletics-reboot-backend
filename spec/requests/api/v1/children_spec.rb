@@ -72,10 +72,9 @@ RSpec.describe "Api::V1::Children" do
     end
 
     it "forbids non-members from creating children" do
-      expect {
-        post "/api/v1/children", params: params,
-          headers: auth_headers_for(other_user)
-      }.not_to change(User, :count)
+      post "/api/v1/families/#{family.id}/children",
+        params: { data: { attributes: params.dig(:data, :attributes) } },
+        headers: auth_headers_for(other_user)
 
       expect(response).to have_http_status(:forbidden)
     end

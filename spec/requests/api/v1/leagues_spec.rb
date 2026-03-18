@@ -32,6 +32,9 @@ RSpec.describe "Api::V1::Leagues" do
             min_grade: 3,
             max_grade: 4,
             capacity: 25
+          },
+          relationships: {
+            season: { data: { type: "seasons", id: season.id.to_s } }
           }
         }
       }

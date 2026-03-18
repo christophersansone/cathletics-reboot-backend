@@ -13,10 +13,11 @@ RSpec.describe "Api::V1::Families" do
     it "returns families for the authenticated user" do
       create(:family) # other family
 
-      get "/api/v1/families", headers: auth_headers_for(parent)
+      get "/api/v1/families", params: { user_id: parent.id }, headers: auth_headers_for(parent)
 
       expect(response).to have_http_status(:ok)
       expect(parsed_body["data"].length).to eq(1)
+      expect(parsed_body["data"].first["id"].to_i).to eq(family.id)
     end
   end
 

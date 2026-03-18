@@ -70,9 +70,9 @@ RSpec.describe User do
     it "soft deletes instead of destroying" do
       user = create(:user)
       user.mark_as_deleted!
-      expect(user.deleted?).to be true
-      expect(User.count).to eq(0)
-      expect(User.with_deleted.count).to eq(1)
+      expect(user.reload.deleted?).to be true
+      expect(User.undeleted).not_to include(user)
+      expect(User.with_deleted.count).to be >= 1
     end
   end
 

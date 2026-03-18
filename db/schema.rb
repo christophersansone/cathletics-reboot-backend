@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_06_000002) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_07_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -160,6 +160,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_06_000002) do
     t.index ["league_id"], name: "index_registrations_on_league_id"
     t.index ["registered_by_id"], name: "index_registrations_on_registered_by_id"
     t.index ["user_id"], name: "index_registrations_on_user_id"
+  end
+
+  create_table "scheduled_events", force: :cascade do |t|
+    t.boolean "all_day", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.text "description"
+    t.datetime "end_at", null: false
+    t.jsonb "exdates", default: []
+    t.text "rrule"
+    t.bigint "schedulable_id", null: false
+    t.string "schedulable_type", null: false
+    t.datetime "start_at", null: false
+    t.string "time_zone"
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["deleted_at"], name: "index_scheduled_events_on_deleted_at"
+    t.index ["schedulable_type", "schedulable_id"], name: "index_scheduled_events_on_schedulable"
+    t.index ["schedulable_type", "schedulable_id"], name: "index_scheduled_events_on_schedulable_type_and_schedulable_id"
   end
 
   create_table "seasons", force: :cascade do |t|
