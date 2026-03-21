@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_07_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_08_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -164,6 +164,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_000001) do
 
   create_table "scheduled_events", force: :cascade do |t|
     t.boolean "all_day", default: false, null: false
+    t.string "cancellation_reason"
+    t.datetime "cancelled_from"
+    t.jsonb "cancelled_occurrences", default: [], null: false
     t.datetime "created_at", null: false
     t.datetime "deleted_at"
     t.text "description"

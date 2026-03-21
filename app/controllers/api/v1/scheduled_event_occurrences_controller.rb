@@ -45,8 +45,6 @@ module Api
 
         schedulable.scheduled_events.each do |event|
           event.occurrences_between(from_time, to_time).each do |occ|
-            next if occ[:cancelled]
-
             ical_event = Icalendar::Event.new
             ical_event.dtstart = occ[:start_at]
             ical_event.dtend = occ[:end_at]
@@ -55,6 +53,11 @@ module Api
             ical_event.uid = "cathletics-event-#{event.id}-#{occ[:start_at].to_i}@cathletics"
             ical_event.append_custom_property("X-EVENT-ID", event.id.to_s)
             ical_event.append_custom_property("X-TZID", event.effective_time_zone)
+            ical_event.append_custom_property("X-RECURRING", event.rrule.present? ? "true" : "false")
+            if occ[:cancelled]
+              ical_event.append_custom_property("STATUS", "CANCELLED")
+              ical_event.append_custom_property("X-CANCELLATION-REASON", occ[:cancellation_reason].to_s)
+            end
             cal.add_event(ical_event)
           end
         end

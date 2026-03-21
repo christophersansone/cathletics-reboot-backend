@@ -19,4 +19,20 @@ module JsonApiParams
     result.with_indifferent_access
   end
 
+  def json_api_polymorphic_relationships(*rels)
+    underscored_relationships = params.require(:data).require(:relationships).deep_transform_keys(&:underscore)
+    permit = rels.map { |r| { r => { data: [:type, :id] } } }
+    permitted = underscored_relationships.permit(*permit).to_h
+    result = {}
+    permitted.each_pair do |k,v|
+      result["#{k}_type"] = v && v[:data] && v[:data][:type]
+      result["#{k}_id"] = v && v[:data] && v[:data][:id]
+    end
+    result.with_indifferent_access
+  end
+
+  def json_api_raw_attributes(*attrs)
+    params.require(:data).require(:attributes).slice(*attrs).deep_transform_keys(&:underscore).to_unsafe_h
+  end
+
 end

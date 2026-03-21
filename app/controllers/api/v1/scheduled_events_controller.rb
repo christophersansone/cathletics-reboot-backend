@@ -59,29 +59,16 @@ module Api
       end
 
       def create_params
-        attrs = json_api_attributes(:title, :description, :start_at, :end_at, :time_zone, :all_day, :rrule)
-        attrs = attrs.merge(schedulable_params) if schedulable_params.present?
-        exdates_val = params.dig(:data, :attributes, :exdates)
-        attrs[:exdates] = exdates_val if exdates_val.is_a?(Array)
-        attrs
-      end
-
-      def schedulable_params
-        return {} unless params.dig(:data, :relationships, :schedulable, :data).present?
-
-        data = params.require(:data).require(:relationships).require(:schedulable).require(:data)
-        type = data[:type].to_s.singularize.classify
-        id = data[:id]
-        return {} if type.blank? || id.blank?
-
-        { schedulable_type: type, schedulable_id: id }
+        arrays = json_api_raw_attributes(:exdates, :cancelled_occurrences)
+        attrs = json_api_attributes(:title, :description, :start_at, :end_at, :time_zone, :all_day, :rrule, :cancelled_from, :cancellation_reason)
+        attrs = attrs.merge(json_api_polymorphic_relationships(:schedulable))
+        arrays.merge(attrs)
       end
 
       def update_params
-        attrs = json_api_attributes(:title, :description, :start_at, :end_at, :time_zone, :all_day, :rrule)
-        exdates_val = params.dig(:data, :attributes, :exdates)
-        attrs[:exdates] = exdates_val if exdates_val.is_a?(Array)
-        attrs
+        arrays = json_api_raw_attributes(:exdates, :cancelled_occurrences)
+        attrs = json_api_attributes(:title, :description, :start_at, :end_at, :time_zone, :all_day, :rrule, :cancelled_from, :cancellation_reason)
+        arrays.merge(attrs)
       end
 
       def render_params

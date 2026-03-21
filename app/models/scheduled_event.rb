@@ -18,13 +18,15 @@ class ScheduledEvent < ApplicationRecord
   end
 
   # Expand this event's occurrences in the given range (UTC).
-  # Returns array of hashes: { start_at:, end_at:, cancelled: }
+  # Returns array of hashes: { start_at:, end_at:, cancelled:, cancellation_reason: }
+  # exdates = "removed" (omitted from list). cancelled_occurrences / cancelled_from = "cancelled" (included with reason).
   def occurrences_between(from_time, to_time)
     from_time = from_time.to_time.utc
     to_time = to_time.to_time.utc
     if rrule.blank?
+      return [] if exdate?(start_at.utc)
+
       occ = single_occurrence
-      return [] if occ[:cancelled]
       return [] if occ[:start_at] < from_time || occ[:start_at] > to_time
       return [occ]
     end
@@ -47,10 +49,12 @@ class ScheduledEvent < ApplicationRecord
   end
 
   def single_occurrence
+    cancelled, reason = cancellation_for(start_at.utc)
     {
       start_at: start_at.utc,
       end_at: end_at.utc,
-      cancelled: exdate?(start_at)
+      cancelled: cancelled,
+      cancellation_reason: reason
     }
   end
 
@@ -58,6 +62,27 @@ class ScheduledEvent < ApplicationRecord
     return false if exdates.blank?
 
     exdates.is_a?(Array) && exdates.any? { |d| time_in_exdates?(dt, d) }
+  end
+
+  # Returns [cancelled?, reason] for this occurrence start time.
+  def cancellation_for(occurrence_start)
+    if cancelled_from.present? && occurrence_start >= cancelled_from.utc
+      return true, cancellation_reason.presence
+    end
+    return false, nil if self.cancelled_occurrences.blank?
+
+    list = Array.wrap(self.cancelled_occurrences)
+    entry = list.find { |e| time_matches_occurrence?(occurrence_start, e) }
+    entry ? [true, entry["reason"].presence] : [false, nil]
+  end
+
+  def time_matches_occurrence?(dt, entry)
+    return false unless entry.is_a?(Hash) && entry["start_at"].present?
+
+    parsed = Time.zone.parse(entry["start_at"].to_s)&.utc
+    return false unless parsed
+
+    (dt.to_i - parsed.to_i).abs < 2
   end
 
   def time_in_exdates?(dt, d)
@@ -91,7 +116,8 @@ class ScheduledEvent < ApplicationRecord
       end_utc = end_t.respond_to?(:to_time) ? end_t.to_time.utc : Time.zone.at(end_t).utc
       next if exdate?(start_utc)
 
-      occurrences << { start_at: start_utc, end_at: end_utc, cancelled: false }
+      cancelled, reason = cancellation_for(start_utc)
+      occurrences << { start_at: start_utc, end_at: end_utc, cancelled: cancelled, cancellation_reason: reason }
     end
     occurrences
   end
