@@ -46,6 +46,23 @@ RSpec.describe "Api::V1::ScheduledEventOccurrences" do
       expect(response.body).to include(scheduled_event.title)
     end
 
+    it "emits STATUS:CANCELLED, X-CANCELLATION-REASON, and UTC Zulu DTSTART/DTEND for cancelled occurrences" do
+      t = scheduled_event.start_at
+      scheduled_event.update!(
+        cancelled_occurrences: [{ "start_at" => t.utc.iso8601, "reason" => "Rain check" }]
+      )
+      get "/api/v1/scheduled_event_occurrences",
+        params: { schedulable_type: "Team", schedulable_id: team.id, from: from, to: to },
+        headers: auth_headers_for(admin, organization: organization)
+
+      expect(response).to have_http_status(:ok)
+      body = response.body
+      expect(body).to include("STATUS:CANCELLED")
+      expect(body).to include("X-CANCELLATION-REASON:Rain check")
+      expect(body).to match(/DTSTART:\d{8}T\d{6}Z/)
+      expect(body).to match(/DTEND:\d{8}T\d{6}Z/)
+    end
+
     it "returns 403 when user cannot read the schedulable" do
       other_user = create(:user)
       get "/api/v1/scheduled_event_occurrences",

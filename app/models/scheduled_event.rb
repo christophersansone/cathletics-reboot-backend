@@ -73,13 +73,20 @@ class ScheduledEvent < ApplicationRecord
 
     list = Array.wrap(self.cancelled_occurrences)
     entry = list.find { |e| time_matches_occurrence?(occurrence_start, e) }
-    entry ? [true, entry["reason"].presence] : [false, nil]
+    entry ? [true, cancellation_entry_reason(entry)] : [false, nil]
+  end
+
+  def cancellation_entry_reason(entry)
+    return unless entry.is_a?(Hash)
+
+    (entry["reason"].presence || entry[:reason].presence)
   end
 
   def time_matches_occurrence?(dt, entry)
-    return false unless entry.is_a?(Hash) && entry["start_at"].present?
+    start_val = entry.is_a?(Hash) ? (entry["start_at"].presence || entry[:start_at]) : nil
+    return false unless start_val.present?
 
-    parsed = Time.zone.parse(entry["start_at"].to_s)&.utc
+    parsed = Time.zone.parse(start_val.to_s)&.utc
     return false unless parsed
 
     (dt.to_i - parsed.to_i).abs < 2
@@ -122,9 +129,21 @@ class ScheduledEvent < ApplicationRecord
     occurrences
   end
 
+  # EXDATE values for Icalendar must be Time-like. Strings must be parsed: ActiveSupport::StringInquirer
+  # makes ISO strings respond to `to_time`, so we must not pass raw strings through to the gem.
   def parse_exdate(d)
-    return d if d.respond_to?(:to_time)
-
-    Time.zone.parse(d.to_s)
+    t =
+      if d.is_a?(String)
+        Time.zone.parse(d)
+      elsif d.is_a?(Time)
+        d
+      elsif defined?(ActiveSupport::TimeWithZone) && d.is_a?(ActiveSupport::TimeWithZone)
+        d
+      elsif d.respond_to?(:to_time)
+        d.to_time
+      else
+        Time.zone.parse(d.to_s)
+      end
+    t&.utc
   end
 end

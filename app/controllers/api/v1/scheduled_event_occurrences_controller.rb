@@ -46,8 +46,11 @@ module Api
         schedulable.scheduled_events.each do |event|
           event.occurrences_between(from_time, to_time).each do |occ|
             ical_event = Icalendar::Event.new
-            ical_event.dtstart = occ[:start_at]
-            ical_event.dtend = occ[:end_at]
+            # Use explicit UTC (…Z) so clients like ical.js match Wall times to DB/recurrence UTC.
+            # Floating DTSTART (no zone) makes JS interpret in local TZ; cancellation PATCH then
+            # stores a different instant and server-side cancellation matching fails → no STATUS in feed.
+            ical_event.dtstart = ical_datetime_utc(occ[:start_at])
+            ical_event.dtend = ical_datetime_utc(occ[:end_at])
             ical_event.summary = event.title
             ical_event.description = event.description if event.description.present?
             ical_event.uid = "cathletics-event-#{event.id}-#{occ[:start_at].to_i}@cathletics"
@@ -73,6 +76,12 @@ module Api
 
       def empty_calendar_ical
         Icalendar::Calendar.new.to_ical
+      end
+
+      def ical_datetime_utc(time)
+        t = time.respond_to?(:to_time) ? time.to_time : Time.zone.parse(time.to_s)
+        t = t.utc
+        Icalendar::Values::DateTime.new(t.strftime("%Y%m%dT%H%M%SZ"))
       end
     end
   end

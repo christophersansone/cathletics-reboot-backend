@@ -1,24 +1,38 @@
-# README
+# Cathletics API (Rails)
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+## Tests (RSpec)
 
-Things you may want to cover:
+Run the test suite **inside Docker** from this directory (`backend/`), where `compose.yaml` lives. Do not assume `bundle exec rspec` works on the host unless your environment matches the container.
 
-* Ruby version
+**All specs:**
 
-* System dependencies
+```bash
+docker compose run --rm rails bundle exec rspec
+```
 
-* Configuration
+**Single file or pattern:**
 
-* Database creation
+```bash
+docker compose run --rm rails bundle exec rspec spec/models/scheduled_event_spec.rb
+docker compose run --rm rails bundle exec rspec spec/requests/api/v1/scheduled_events_spec.rb
+```
 
-* Database initialization
+**With options:**
 
-* How to run the test suite
+```bash
+docker compose run --rm rails bundle exec rspec --format documentation
+```
 
-* Services (job queues, cache servers, search engines, etc.)
+The `rails` service has the app code, Ruby gems, and `DATABASE_URL` pointed at the Compose Postgres service, so database-backed specs run correctly.
 
-* Deployment instructions
+## Local development
 
-* ...
+See `compose.yaml` for services (`rails`, `db`, `redis`, etc.). Typical app server:
+
+```bash
+docker compose up rails
+```
+
+---
+
+*Legacy placeholder sections (Ruby version, dependencies, deployment) can be filled in as the project matures.*

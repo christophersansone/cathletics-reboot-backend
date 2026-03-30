@@ -24,15 +24,24 @@ module JsonApiParams
     permit = rels.map { |r| { r => { data: [:type, :id] } } }
     permitted = underscored_relationships.permit(*permit).to_h
     result = {}
-    permitted.each_pair do |k,v|
-      result["#{k}_type"] = v && v[:data] && v[:data][:type]
+    permitted.each_pair do |k, v|
+      raw_type = v && v[:data] && v[:data][:type]
+      result["#{k}_type"] = raw_type.present? ? raw_type.to_s.singularize.classify : nil
       result["#{k}_id"] = v && v[:data] && v[:data][:id]
     end
     result.with_indifferent_access
   end
 
+  # Array / JSON attributes (exdates, cancelled_occurrences, etc.) that must not go through
+  # ActionController::Parameters#permit (unknown nesting). Clients may send camelCase keys
+  # (e.g. Ember); normalize to snake_case before reading.
   def json_api_raw_attributes(*attrs)
-    params.require(:data).require(:attributes).slice(*attrs).deep_transform_keys(&:underscore).to_unsafe_h
+    underscored_attributes = params.require(:data).require(:attributes).deep_transform_keys(&:underscore).to_unsafe_h
+    result = {}
+    attrs.each do |attr|
+      result[attr] = underscored_attributes[attr] if underscored_attributes.has_key?(attr)
+    end
+    result.with_indifferent_access
   end
 
 end
