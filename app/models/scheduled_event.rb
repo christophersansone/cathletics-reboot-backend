@@ -9,12 +9,23 @@ class ScheduledEvent < ApplicationRecord
   validates :start_at, presence: true
   validates :end_at, presence: true
   validate :end_at_after_start_at
+  validate :recurrence_consistency
+  validate :recurs_until_on_or_after_start_date
 
   # Optional: basic rrule presence check; full validation happens on expansion
   validates :rrule, length: { maximum: 1024 }, allow_blank: true
 
+  before_validation :strip_rrule_until_and_count
+
   def effective_time_zone
     time_zone.presence || schedulable_organization&.time_zone || "UTC"
+  end
+
+  # `start_at` / `end_at` = first occurrence only (wall start/end of that instance).
+  # `recurs_until` = last calendar day (in `effective_time_zone`) that may still have an occurrence.
+  # `rrule` = repeat pattern only (FREQ, BYDAY, INTERVAL); never UNTIL/COUNT — end date is always `recurs_until`.
+  def recurring?
+    recurs_until.present? && rrule.present?
   end
 
   # Expand this event's occurrences in the given range (UTC).
@@ -23,7 +34,7 @@ class ScheduledEvent < ApplicationRecord
   def occurrences_between(from_time, to_time)
     from_time = from_time.to_time.utc
     to_time = to_time.to_time.utc
-    if rrule.blank?
+    unless recurring?
       return [] if exdate?(start_at.utc)
 
       occ = single_occurrence
@@ -34,12 +45,58 @@ class ScheduledEvent < ApplicationRecord
     expand_recurrence(from_time, to_time)
   end
 
+  def self.strip_rrule_until_and_count(rrule)
+    return nil if rrule.blank?
+
+    rrule.to_s.strip
+      .sub(/;?\s*UNTIL=[^;]+/i, "")
+      .sub(/;?\s*COUNT=\d+/i, "")
+      .gsub(/^;+|;+$/, "")
+      .gsub(/;{2,}/, ";")
+      .strip.presence
+  end
+
   private
 
   def end_at_after_start_at
     return if end_at.blank? || start_at.blank?
 
     errors.add(:end_at, "must be after start_at") if end_at <= start_at
+  end
+
+  def strip_rrule_until_and_count
+    self.rrule = self.class.strip_rrule_until_and_count(rrule)
+  end
+
+  def recurrence_consistency
+    if recurs_until.present? && rrule.blank?
+      errors.add(:rrule, "must be present when recurs_until is set")
+    end
+    self.rrule = nil if recurs_until.blank?
+  end
+
+  def recurs_until_on_or_after_start_date
+    return if recurs_until.blank? || start_at.blank?
+
+    zone = Time.find_zone!(effective_time_zone)
+    start_date = start_at.in_time_zone(zone).to_date
+    return if recurs_until >= start_date
+
+    errors.add(:recurs_until, "must be on or after the first event date (#{effective_time_zone})")
+  end
+
+  # RRULE UNTIL must be UTC in compact form; use end of recurs_until calendar day in event TZ.
+  def rrule_until_utc_suffix
+    z = Time.find_zone!(effective_time_zone)
+    end_time = z.local(recurs_until.year, recurs_until.month, recurs_until.day).end_of_day.utc
+    end_time.strftime("%Y%m%dT%H%M%SZ")
+  end
+
+  def rrule_for_expansion
+    base = rrule.to_s.strip
+    raise ArgumentError, "rrule blank for recurring event" if base.blank?
+
+    "#{base};UNTIL=#{rrule_until_utc_suffix}"
   end
 
   def schedulable_organization
@@ -108,7 +165,7 @@ class ScheduledEvent < ApplicationRecord
     event = Icalendar::Event.new
     event.dtstart = start_at
     event.dtend = end_at
-    event.rrule = rrule
+    event.rrule = rrule_for_expansion
     if exdates.present? && exdates.is_a?(Array)
       exdate_times = exdates.filter_map { |d| parse_exdate(d) }
       event.exdate = exdate_times if exdate_times.any?

@@ -100,6 +100,37 @@ RSpec.describe "Api::V1::ScheduledEvents" do
       expect(parsed_body.dig("data", "attributes", "title")).to eq("Game Day")
       created = ScheduledEvent.last
       expect(created.schedulable).to eq(team)
+      expect(created.recurs_until).to be_nil
+      expect(created.rrule).to be_nil
+    end
+
+    it "creates a recurring event with recurs_until and rrule pattern" do
+      start_t = Time.zone.parse("2026-09-01 19:00:00")
+      recur_body = {
+        data: {
+          attributes: {
+            title: "Weekly practice",
+            start_at: start_t.iso8601,
+            end_at: (start_t + 2.hours).iso8601,
+            all_day: false,
+            rrule: "FREQ=WEEKLY;BYDAY=TU",
+            recurs_until: "2026-12-15"
+          },
+          relationships: {
+            schedulable: { data: { type: "teams", id: team.id.to_s } }
+          }
+        }
+      }
+      expect {
+        post "/api/v1/scheduled_events", params: recur_body,
+          headers: auth_headers_for(admin, organization: organization)
+      }.to change(ScheduledEvent, :count).by(1)
+
+      expect(response).to have_http_status(:created)
+      created = ScheduledEvent.last
+      expect(created.rrule).to eq("FREQ=WEEKLY;BYDAY=TU")
+      expect(created.recurs_until).to eq(Date.new(2026, 12, 15))
+      expect(created).to be_recurring
     end
 
     it "returns 401 without authentication" do

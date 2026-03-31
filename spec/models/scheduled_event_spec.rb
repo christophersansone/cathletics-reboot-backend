@@ -76,10 +76,11 @@ RSpec.describe ScheduledEvent, type: :model do
   end
 
   describe "#occurrences_between — recurring event" do
-    # Tuesdays 19:00 UTC — four weeks
+    # Tuesdays 19:00 UTC — Jun 9, 16, 23, 30
     let(:series_start) { Time.zone.parse("2026-06-09 19:00:00") }
     let(:series_end) { Time.zone.parse("2026-06-09 20:30:00") }
-    let(:rrule) { "FREQ=WEEKLY;BYDAY=TU;COUNT=4" }
+    let(:rrule) { "FREQ=WEEKLY;BYDAY=TU" }
+    let(:recurs_until) { Date.new(2026, 6, 30) }
 
     let(:event) do
       create(
@@ -87,8 +88,22 @@ RSpec.describe ScheduledEvent, type: :model do
         schedulable: team,
         start_at: series_start,
         end_at: series_end,
-        rrule: rrule
+        rrule: rrule,
+        recurs_until: recurs_until
       )
+    end
+
+    it "clears rrule when recurs_until is absent (not recurring)" do
+      e = build(:scheduled_event, schedulable: team, start_at: series_start, end_at: series_end, rrule: rrule, recurs_until: nil)
+      expect(e).to be_valid
+      expect(e.rrule).to be_nil
+      expect(e).not_to be_recurring
+    end
+
+    it "requires rrule when recurs_until is set" do
+      e = build(:scheduled_event, schedulable: team, start_at: series_start, end_at: series_end, rrule: nil, recurs_until: recurs_until)
+      expect(e).not_to be_valid
+      expect(e.errors[:rrule]).to be_present
     end
 
     it "expands multiple occurrences" do

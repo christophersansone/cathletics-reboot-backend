@@ -56,7 +56,7 @@ module Api
             ical_event.uid = "cathletics-event-#{event.id}-#{occ[:start_at].to_i}@cathletics"
             ical_event.append_custom_property("X-EVENT-ID", event.id.to_s)
             ical_event.append_custom_property("X-TZID", event.effective_time_zone)
-            ical_event.append_custom_property("X-RECURRING", event.rrule.present? ? "true" : "false")
+            ical_event.append_custom_property("X-RECURRING", event.recurring? ? "true" : "false")
             if occ[:cancelled]
               ical_event.append_custom_property("STATUS", "CANCELLED")
               ical_event.append_custom_property("X-CANCELLATION-REASON", occ[:cancellation_reason].to_s)

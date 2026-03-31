@@ -60,14 +60,14 @@ module Api
 
       def create_params
         arrays = json_api_raw_attributes(:exdates, :cancelled_occurrences)
-        attrs = json_api_attributes(:title, :description, :start_at, :end_at, :time_zone, :all_day, :rrule, :cancelled_from, :cancellation_reason)
+        attrs = json_api_attributes(:title, :description, :start_at, :end_at, :time_zone, :all_day, :rrule, :recurs_until, :cancelled_from, :cancellation_reason)
         attrs = attrs.merge(json_api_polymorphic_relationships(:schedulable))
         arrays.merge(attrs)
       end
 
       def update_params
         arrays = json_api_raw_attributes(:exdates, :cancelled_occurrences)
-        attrs = json_api_attributes(:title, :description, :start_at, :end_at, :time_zone, :all_day, :rrule, :cancelled_from, :cancellation_reason)
+        attrs = json_api_attributes(:title, :description, :start_at, :end_at, :time_zone, :all_day, :rrule, :recurs_until, :cancelled_from, :cancellation_reason)
         arrays.merge(attrs)
       end
 
