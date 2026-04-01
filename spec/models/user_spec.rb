@@ -54,6 +54,18 @@ RSpec.describe User do
     end
   end
 
+  describe "#team_participant_user_ids" do
+    it "includes self and children from families where user is parent or guardian" do
+      family = create(:family)
+      parent = create(:user)
+      create(:family_membership, family: family, user: parent, role: :parent)
+      child = create(:user, :child)
+      create(:family_membership, family: family, user: child, role: :child)
+
+      expect(parent.team_participant_user_ids).to contain_exactly(parent.id, child.id)
+    end
+  end
+
   describe "#child_in_any_family?" do
     it "returns true when user has a child family membership" do
       membership = create(:family_membership, :child)

@@ -71,5 +71,37 @@ RSpec.describe "Api::V1::ScheduledEventOccurrences" do
 
       expect(response).to have_http_status(:forbidden)
     end
+
+    it "omits exdate'd occurrences from the iCal (YYYY-MM-dd)" do
+      series_start = Time.zone.parse("2026-06-09 19:00:00")
+      series_end = Time.zone.parse("2026-06-09 20:30:00")
+      recurring = create(
+        :scheduled_event,
+        schedulable: team,
+        title: "Weekly practice",
+        start_at: series_start,
+        end_at: series_end,
+        rrule: "FREQ=WEEKLY;BYDAY=TU",
+        recurs_until: Date.new(2026, 6, 30),
+        exdates: ["2026-06-16"]
+      )
+      window_from = series_start - 1.day
+      window_to = series_start + 1.month
+      get "/api/v1/scheduled_event_occurrences",
+        params: {
+          schedulable_type: "Team",
+          schedulable_id: team.id,
+          from: window_from.iso8601,
+          to: window_to.iso8601
+        },
+        headers: auth_headers_for(admin, organization: organization)
+
+      expect(response).to have_http_status(:ok)
+      body = response.body
+      excluded_ts = Time.zone.parse("2026-06-16 19:00:00").utc.to_i
+      expect(body).not_to include("cathletics-event-#{recurring.id}-#{excluded_ts}@cathletics")
+      # Jun 9, 23, 30 still present (4 Tuesdays minus one exdate)
+      expect(body.scan("BEGIN:VEVENT").size).to eq(3)
+    end
   end
 end

@@ -21,8 +21,11 @@ services:
       - '3000:3000'
     command: bundle exec puma -C config/puma.rb
     environment: &base_env
+      DATABASE_HOST: db
+      DATABASE_USERNAME: postgres
+      DATABASE_PASSWORD: password
+      DATABASE_PORT: 5432
       RAILS_MAX_THREADS: 1
-      DATABASE_URL: postgresql://postgres:password@db:5432/cathletics_development
       REDIS_URL: redis://redis:6379/1
 
   sidekiq:

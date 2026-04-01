@@ -22,6 +22,7 @@ class Ability
 
     can :read, Family, id: user.family_ids
     can :read, FamilyMembership, family_id: user.family_ids
+    can :read, OrganizationMembership, user_id: user.id
   end
 
   def define_family_abilities
@@ -38,7 +39,7 @@ class Ability
     can :read, Registration, user_id: [user.id] + child_ids
     can [:cancel], Registration, registered_by_id: user.id
 
-    participant_ids = ([user.id] + child_ids).uniq
+    participant_ids = user.team_participant_user_ids
     team_ids = TeamMembership.where(user_id: participant_ids).pluck(:team_id)
     can :read, Team, id: team_ids
     can :read, TeamMembership, team_id: team_ids
@@ -83,7 +84,7 @@ class Ability
   end
 
   def define_team_role_abilities
-    coached_team_ids = user.team_memberships.where(role: [:coach, :assistant_coach]).pluck(:team_id)
+    coached_team_ids = user.team_memberships.where(role: [:coach, :assistant_coach, :manager]).pluck(:team_id)
     return if coached_team_ids.empty?
 
     can :read, Team, id: coached_team_ids

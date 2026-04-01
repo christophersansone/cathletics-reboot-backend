@@ -29,4 +29,11 @@ class User < ApplicationRecord
   def child_in_any_family?
     family_memberships.exists?(role: :child)
   end
+
+  # Self plus children in families where this user is a parent or guardian (team registration / schedule context).
+  def team_participant_user_ids
+    family_ids = family_memberships.where(role: [:parent, :guardian]).pluck(:family_id)
+    child_ids = FamilyMembership.where(family_id: family_ids, role: :child).pluck(:user_id)
+    ([id] + child_ids).uniq
+  end
 end

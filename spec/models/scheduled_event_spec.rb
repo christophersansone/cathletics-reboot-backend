@@ -31,6 +31,18 @@ RSpec.describe ScheduledEvent, type: :model do
       expect(event.occurrences_between(window_from, window_to)).to eq([])
     end
 
+    it "omits removed single events when exdate is date-only (YYYY-MM-dd)" do
+      event = create(
+        :scheduled_event,
+        schedulable: team,
+        start_at: start_at,
+        end_at: end_at,
+        rrule: nil,
+        exdates: ["2026-06-10"]
+      )
+      expect(event.occurrences_between(window_from, window_to)).to eq([])
+    end
+
     it "marks cancelled with per-occurrence note" do
       event = create(
         :scheduled_event,
@@ -145,6 +157,14 @@ RSpec.describe ScheduledEvent, type: :model do
       second = Time.zone.parse("2026-06-16 19:00:00").utc
       event.update!(exdates: [second.iso8601])
       occs = event.occurrences_between(series_start - 1.day, series_start + 1.month)
+      expect(occs.length).to eq(3)
+      expect(occs.none? { |o| o[:start_at].to_i == second.to_i }).to be true
+    end
+
+    it "removes one occurrence via date-only exdate (YYYY-MM-dd)" do
+      event.update!(exdates: ["2026-06-16"])
+      occs = event.occurrences_between(series_start - 1.day, series_start + 1.month)
+      second = Time.zone.parse("2026-06-16 19:00:00").utc
       expect(occs.length).to eq(3)
       expect(occs.none? { |o| o[:start_at].to_i == second.to_i }).to be true
     end

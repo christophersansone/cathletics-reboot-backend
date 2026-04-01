@@ -54,6 +54,7 @@ Rails.application.routes.draw do
       end
 
       resources :teams, only: [] do
+        get :associated_members, on: :member
         resources :scheduled_events, only: [:index]
         resources :team_memberships, path: "memberships"
       end

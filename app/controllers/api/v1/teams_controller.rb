@@ -2,7 +2,7 @@ module Api
   module V1
     class TeamsController < BaseController
       before_action :set_league, only: [:index]
-      before_action :set_team, only: [:show, :update, :destroy]
+      before_action :set_team, only: [:show, :update, :destroy, :associated_members]
 
       def index
         authorize! :read, @league
@@ -41,6 +41,14 @@ module Api
         head :no_content
       end
 
+      def associated_members
+        authorize! :read, @team
+        relation = @team.team_memberships
+          .where(user_id: current_user.team_participant_user_ids)
+          .includes(:user)
+        render_paginated relation, **associated_members_render_params
+      end
+
       private
 
       def set_league
@@ -57,6 +65,10 @@ module Api
 
       def render_params
         { included: { league: { season: { activity_type: :organization } } } }
+      end
+
+      def associated_members_render_params
+        { included: [:team, :user] }
       end
     end
   end

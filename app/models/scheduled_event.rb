@@ -149,13 +149,20 @@ class ScheduledEvent < ApplicationRecord
     (dt.to_i - parsed.to_i).abs < 2
   end
 
+  # exdates may be full instants (legacy) or Date-only "YYYY-MM-dd" (UI), meaning "that calendar day"
+  # in the event timezone — must not require timestamp equality with midnight-parsed strings.
   def time_in_exdates?(dt, d)
+    zone = Time.find_zone!(effective_time_zone)
+    dt_utc = dt.respond_to?(:utc) ? dt.utc : Time.zone.parse(dt.to_s).utc
+
+    if d.is_a?(String) && d.match?(/\A\d{4}-\d{2}-\d{2}\z/)
+      return dt_utc.in_time_zone(zone).to_date == Date.iso8601(d)
+    end
+
     parsed = d.is_a?(String) ? Time.zone.parse(d) : d
     return false unless parsed
 
-    parsed = parsed.utc
-    dt = dt.utc if dt.respond_to?(:utc)
-    parsed.to_i == dt.to_i
+    parsed.to_i == dt_utc.to_i
   end
 
   def expand_recurrence(from_time, to_time)
