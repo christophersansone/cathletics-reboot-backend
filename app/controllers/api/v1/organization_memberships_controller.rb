@@ -4,10 +4,14 @@ module Api
       before_action :set_organization_membership, only: [:show, :update, :destroy]
 
       def index
-        memberships = current_organization.organization_memberships.includes(:user)
-        memberships = filter_by_user(memberships)
-        memberships = filter_by_search(memberships)
-        authorize! :read_members, current_organization
+        if params[:user_id] == current_user.id.to_s
+          memberships = current_user.organization_memberships
+        else
+          memberships = current_organization.organization_memberships.includes(:user)
+          memberships = filter_by_user(memberships)
+          memberships = filter_by_search(memberships)
+          authorize! :read_members, current_organization
+        end
         render_paginated memberships, **render_params
       end
 

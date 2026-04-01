@@ -9,13 +9,15 @@ class ScheduledEvent < ApplicationRecord
   validates :start_at, presence: true
   validates :end_at, presence: true
   validate :end_at_after_start_at
-  validate :recurrence_consistency
+  validate :recurrence_must_be_consistent
   validate :recurs_until_on_or_after_start_date
+  validate :exdates_must_be_calendar_dates
 
   # Optional: basic rrule presence check; full validation happens on expansion
   validates :rrule, length: { maximum: 1024 }, allow_blank: true
 
   before_validation :strip_rrule_until_and_count
+  before_validation :normalize_cancelled_occurrences
 
   def effective_time_zone
     time_zone.presence || schedulable_organization&.time_zone || "UTC"
@@ -68,11 +70,47 @@ class ScheduledEvent < ApplicationRecord
     self.rrule = self.class.strip_rrule_until_and_count(rrule)
   end
 
-  def recurrence_consistency
+  def normalize_cancelled_occurrences
+    self.cancelled_occurrences = [] if cancelled_occurrences.nil?
+    return if cancelled_occurrences.blank?
+
+    raw = Array.wrap(cancelled_occurrences)
+    normalized = []
+    raw.each_with_index do |entry, idx|
+      unless entry.is_a?(Hash)
+        errors.add(:cancelled_occurrences, "entry #{idx} must be a hash with start_at")
+        return
+      end
+
+      ind = entry.with_indifferent_access
+      start_raw = ind[:start_at]
+      if start_raw.blank?
+        errors.add(:cancelled_occurrences, "entry #{idx} must include start_at")
+        return
+      end
+
+      parsed = Time.zone.parse(start_raw.to_s)&.utc
+      unless parsed
+        errors.add(:cancelled_occurrences, "entry #{idx} has invalid start_at")
+        return
+      end
+
+      row = { "start_at" => parsed.iso8601 }
+      row["reason"] = ind[:reason].to_s if ind[:reason].present?
+      normalized << row
+    end
+
+    self.cancelled_occurrences = normalized
+  end
+
+  def recurrence_must_be_consistent
     if recurs_until.present? && rrule.blank?
       errors.add(:rrule, "must be present when recurs_until is set")
     end
-    self.rrule = nil if recurs_until.blank?
+
+    if rrule.present? && recurs_until.blank?
+      errors.add(:recurs_until, "must be present when rrule is set")
+    end
   end
 
   def recurs_until_on_or_after_start_date
@@ -116,9 +154,9 @@ class ScheduledEvent < ApplicationRecord
   end
 
   def exdate?(dt)
-    return false if exdates.blank?
+    return false if exdates.blank? || !exdates.is_a?(Array)
 
-    exdates.is_a?(Array) && exdates.any? { |d| time_in_exdates?(dt, d) }
+    exdates.any? { |d| time_in_exdates?(dt, d) }
   end
 
   # Returns [cancelled?, reason] for this occurrence start time.
@@ -126,21 +164,15 @@ class ScheduledEvent < ApplicationRecord
     if cancelled_from.present? && occurrence_start >= cancelled_from.utc
       return true, cancellation_reason.presence
     end
-    return false, nil if self.cancelled_occurrences.blank?
+    return false, nil if cancelled_occurrences.blank?
 
-    list = Array.wrap(self.cancelled_occurrences)
+    list = Array.wrap(cancelled_occurrences)
     entry = list.find { |e| time_matches_occurrence?(occurrence_start, e) }
-    entry ? [true, cancellation_entry_reason(entry)] : [false, nil]
-  end
-
-  def cancellation_entry_reason(entry)
-    return unless entry.is_a?(Hash)
-
-    (entry["reason"].presence || entry[:reason].presence)
+    entry ? [true, entry["reason"].presence] : [false, nil]
   end
 
   def time_matches_occurrence?(dt, entry)
-    start_val = entry.is_a?(Hash) ? (entry["start_at"].presence || entry[:start_at]) : nil
+    start_val = entry["start_at"]
     return false unless start_val.present?
 
     parsed = Time.zone.parse(start_val.to_s)&.utc
@@ -149,20 +181,24 @@ class ScheduledEvent < ApplicationRecord
     (dt.to_i - parsed.to_i).abs < 2
   end
 
-  # exdates may be full instants (legacy) or Date-only "YYYY-MM-dd" (UI), meaning "that calendar day"
-  # in the event timezone — must not require timestamp equality with midnight-parsed strings.
+  # exdates: ISO 8601 calendar dates only ("YYYY-MM-dd") — omitted occurrences on that day in `effective_time_zone`.
+  # Callers pass UTC `Time` instances (expanded occurrences or `start_at.utc`).
   def time_in_exdates?(dt, d)
     zone = Time.find_zone!(effective_time_zone)
-    dt_utc = dt.respond_to?(:utc) ? dt.utc : Time.zone.parse(dt.to_s).utc
+    coerce_time_utc(dt).in_time_zone(zone).to_date == Date.iso8601(d)
+  end
 
-    if d.is_a?(String) && d.match?(/\A\d{4}-\d{2}-\d{2}\z/)
-      return dt_utc.in_time_zone(zone).to_date == Date.iso8601(d)
-    end
+  def coerce_time_utc(dt)
+    dt.respond_to?(:utc) ? dt.utc : Time.zone.parse(dt.to_s).utc
+  end
 
-    parsed = d.is_a?(String) ? Time.zone.parse(d) : d
-    return false unless parsed
-
-    parsed.to_i == dt_utc.to_i
+  # icalendar ~2.12 / icalendar-recurrence ~1.2 may yield objects with start_time/end_time or plain time-like values.
+  def icalendar_occurrence_bounds(occ, duration_seconds)
+    start_t = occ.respond_to?(:start_time) ? occ.start_time : occ
+    end_t = occ.respond_to?(:end_time) ? occ.end_time : (start_t + duration_seconds)
+    start_utc = start_t.respond_to?(:to_time) ? start_t.to_time.utc : Time.zone.at(start_t).utc
+    end_utc = end_t.respond_to?(:to_time) ? end_t.to_time.utc : Time.zone.at(end_t).utc
+    [start_utc, end_utc]
   end
 
   def expand_recurrence(from_time, to_time)
@@ -173,7 +209,7 @@ class ScheduledEvent < ApplicationRecord
     event.dtstart = start_at
     event.dtend = end_at
     event.rrule = rrule_for_expansion
-    if exdates.present? && exdates.is_a?(Array)
+    if exdates.is_a?(Array) && exdates.present?
       exdate_times = exdates.filter_map { |d| parse_exdate(d) }
       event.exdate = exdate_times if exdate_times.any?
     end
@@ -181,10 +217,7 @@ class ScheduledEvent < ApplicationRecord
     duration_seconds = end_at.to_i - start_at.to_i
     occurrences = []
     event.occurrences_between(from_time, to_time).each do |occ|
-      start_t = occ.respond_to?(:start_time) ? occ.start_time : occ
-      end_t = occ.respond_to?(:end_time) ? occ.end_time : (start_t + duration_seconds)
-      start_utc = start_t.respond_to?(:to_time) ? start_t.to_time.utc : Time.zone.at(start_t).utc
-      end_utc = end_t.respond_to?(:to_time) ? end_t.to_time.utc : Time.zone.at(end_t).utc
+      start_utc, end_utc = icalendar_occurrence_bounds(occ, duration_seconds)
       next if exdate?(start_utc)
 
       cancelled, reason = cancellation_for(start_utc)
@@ -193,21 +226,39 @@ class ScheduledEvent < ApplicationRecord
     occurrences
   end
 
-  # EXDATE values for Icalendar must be Time-like. Strings must be parsed: ActiveSupport::StringInquirer
-  # makes ISO strings respond to `to_time`, so we must not pass raw strings through to the gem.
+  # EXDATE instants for Icalendar: same local time-of-day as the series `start_at`, on the given calendar day.
   def parse_exdate(d)
-    t =
-      if d.is_a?(String)
-        Time.zone.parse(d)
-      elsif d.is_a?(Time)
-        d
-      elsif defined?(ActiveSupport::TimeWithZone) && d.is_a?(ActiveSupport::TimeWithZone)
-        d
-      elsif d.respond_to?(:to_time)
-        d.to_time
-      else
-        Time.zone.parse(d.to_s)
+    zone = Time.find_zone!(effective_time_zone)
+    day = Date.iso8601(d)
+    start_local = start_at.in_time_zone(zone)
+    start_local.change(year: day.year, month: day.month, day: day.day).utc
+  end
+
+  def exdates_must_be_calendar_dates
+    return if exdates.blank?
+
+    unless exdates.is_a?(Array)
+      errors.add(:exdates, "must be an array")
+      return
+    end
+
+    exdates.each do |entry|
+      unless entry.is_a?(String)
+        errors.add(:exdates, "must use ISO 8601 calendar date strings (YYYY-MM-dd)")
+        return
       end
-    t&.utc
+
+      unless entry.match?(/\A\d{4}-\d{2}-\d{2}\z/)
+        errors.add(:exdates, "must use YYYY-MM-dd format")
+        return
+      end
+
+      begin
+        Date.iso8601(entry)
+      rescue ArgumentError, Date::Error
+        errors.add(:exdates, "contains invalid calendar date: #{entry.inspect}")
+        return
+      end
+    end
   end
 end

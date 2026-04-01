@@ -5,6 +5,31 @@ require "rails_helper"
 RSpec.describe ScheduledEvent, type: :model do
   let(:team) { create(:team) }
 
+  describe "exdates validation" do
+    it "accepts ISO 8601 calendar dates" do
+      event = build(:scheduled_event, schedulable: team, exdates: ["2026-06-10"])
+      expect(event).to be_valid
+    end
+
+    it "rejects full timestamps" do
+      event = build(:scheduled_event, schedulable: team, exdates: [Time.zone.parse("2026-06-10 19:00:00").utc.iso8601])
+      expect(event).not_to be_valid
+      expect(event.errors[:exdates]).to be_present
+    end
+
+    it "rejects invalid calendar dates" do
+      event = build(:scheduled_event, schedulable: team, exdates: ["2026-02-31"])
+      expect(event).not_to be_valid
+      expect(event.errors[:exdates]).to be_present
+    end
+
+    it "rejects non-string entries" do
+      event = build(:scheduled_event, schedulable: team, exdates: [2026])
+      expect(event).not_to be_valid
+      expect(event.errors[:exdates]).to be_present
+    end
+  end
+
   describe "#occurrences_between — single event" do
     let(:start_at) { Time.zone.parse("2026-06-10 19:00:00") }
     let(:end_at) { Time.zone.parse("2026-06-10 20:30:00") }
@@ -19,19 +44,7 @@ RSpec.describe ScheduledEvent, type: :model do
       expect(occs.first[:cancellation_reason]).to be_nil
     end
 
-    it "omits removed single events (exdate matches start)" do
-      event = create(
-        :scheduled_event,
-        schedulable: team,
-        start_at: start_at,
-        end_at: end_at,
-        rrule: nil,
-        exdates: [start_at.utc.iso8601]
-      )
-      expect(event.occurrences_between(window_from, window_to)).to eq([])
-    end
-
-    it "omits removed single events when exdate is date-only (YYYY-MM-dd)" do
+    it "omits removed single events when exdate is YYYY-MM-dd in event zone" do
       event = create(
         :scheduled_event,
         schedulable: team,
@@ -153,15 +166,7 @@ RSpec.describe ScheduledEvent, type: :model do
       expect(after.first[:cancellation_reason]).to eq("Coach unavailable")
     end
 
-    it "removes one occurrence via exdate" do
-      second = Time.zone.parse("2026-06-16 19:00:00").utc
-      event.update!(exdates: [second.iso8601])
-      occs = event.occurrences_between(series_start - 1.day, series_start + 1.month)
-      expect(occs.length).to eq(3)
-      expect(occs.none? { |o| o[:start_at].to_i == second.to_i }).to be true
-    end
-
-    it "removes one occurrence via date-only exdate (YYYY-MM-dd)" do
+    it "removes one occurrence via exdate (YYYY-MM-dd)" do
       event.update!(exdates: ["2026-06-16"])
       occs = event.occurrences_between(series_start - 1.day, series_start + 1.month)
       second = Time.zone.parse("2026-06-16 19:00:00").utc

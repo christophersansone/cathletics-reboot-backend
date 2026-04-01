@@ -187,8 +187,9 @@ RSpec.describe "Api::V1::ScheduledEvents" do
       expect(co.first["reason"]).to eq(note)
     end
 
-    it "persists exdates (camelCase)" do
-      ex = scheduled_event.start_at.utc.iso8601
+    it "persists exdates as YYYY-MM-dd (camelCase)" do
+      zone = Time.find_zone!(scheduled_event.effective_time_zone)
+      ex = scheduled_event.start_at.in_time_zone(zone).to_date.iso8601
       patch "/api/v1/scheduled_events/#{scheduled_event.id}",
         params: { data: { attributes: { exdates: [ex] } } },
         headers: auth_headers_for(admin, organization: organization)
@@ -196,6 +197,14 @@ RSpec.describe "Api::V1::ScheduledEvents" do
       expect(response).to have_http_status(:ok)
       scheduled_event.reload
       expect(scheduled_event.exdates).to eq([ex])
+    end
+
+    it "rejects non-calendar exdate strings" do
+      patch "/api/v1/scheduled_events/#{scheduled_event.id}",
+        params: { data: { attributes: { exdates: [scheduled_event.start_at.utc.iso8601] } } },
+        headers: auth_headers_for(admin, organization: organization)
+
+      expect(response).to have_http_status(:unprocessable_entity)
     end
 
     it "persists cancelledFrom and cancellationReason (camelCase)" do
