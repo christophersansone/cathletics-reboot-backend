@@ -3,7 +3,10 @@
 class ScheduledEvent < ApplicationRecord
   include SoftDeletable
 
+  enum :rsvp_mode, { none: 0, full: 1, regrets_only: 2 }, prefix: true
+
   belongs_to :schedulable, polymorphic: true
+  has_many :scheduled_event_rsvps, dependent: :destroy
 
   validates :title, presence: true
   validates :start_at, presence: true

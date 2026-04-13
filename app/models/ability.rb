@@ -39,10 +39,13 @@ class Ability
     can :read, Registration, user_id: [user.id] + child_ids
     can [:cancel], Registration, registered_by_id: user.id
 
+    can [:create, :update, :destroy], ScheduledEventRsvp, user_id: [user.id] + child_ids
+
     participant_ids = user.team_participant_user_ids
     team_ids = TeamMembership.where(user_id: participant_ids).pluck(:team_id)
     can :read, Team, id: team_ids
     can :read, TeamMembership, team_id: team_ids
+    can :read, ScheduledEventRsvp, scheduled_event: { schedulable_type: "Team", schedulable_id: team_ids }
   end
 
   def define_organization_abilities
@@ -68,6 +71,7 @@ class Ability
     can :manage, Team, league: { season: { activity_type: { organization_id: organization.id } } }
     can :manage, TeamMembership, team: { league: { season: { activity_type: { organization_id: organization.id } } } }
     can :manage, ScheduledEvent, schedulable_type: "Team", schedulable_id: organization.team_ids
+    can :manage, ScheduledEventRsvp, scheduled_event: { schedulable_type: "Team", schedulable_id: organization.team_ids }
     can :manage, Registration, league: { season: { activity_type: { organization_id: organization.id } } }
   end
 
@@ -79,6 +83,7 @@ class Ability
     can :read, Team, league: { season: { activity_type: { organization_id: organization.id } } }
     can :read, TeamMembership, team: { league: { season: { activity_type: { organization_id: organization.id } } } }
     can :read, ScheduledEvent, schedulable_type: "Team", schedulable_id: organization.team_ids
+    can :read, ScheduledEventRsvp, scheduled_event: { schedulable_type: "Team", schedulable_id: organization.team_ids }
 
     can :create, Registration
   end
@@ -90,6 +95,7 @@ class Ability
     can :read, Team, id: coached_team_ids
     can :manage, TeamMembership, team_id: coached_team_ids
     can :manage, ScheduledEvent, schedulable_type: "Team", schedulable_id: coached_team_ids
+    can :manage, ScheduledEventRsvp, scheduled_event: { schedulable_type: "Team", schedulable_id: coached_team_ids }
     can :read, Registration, league_id: Team.where(id: coached_team_ids).pluck(:league_id)
   end
 end

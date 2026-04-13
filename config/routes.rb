@@ -46,6 +46,7 @@ Rails.application.routes.draw do
       resources :registrations
       resources :team_memberships
       resources :scheduled_events
+      resources :scheduled_event_rsvps
       get :scheduled_event_occurrences, to: "scheduled_event_occurrences#index"
 
       resources :leagues, only: [] do

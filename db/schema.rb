@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_30_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_13_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -162,6 +162,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_30_120000) do
     t.index ["user_id"], name: "index_registrations_on_user_id"
   end
 
+  create_table "scheduled_event_rsvps", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.text "note"
+    t.datetime "occurrence_start_at", null: false
+    t.bigint "responded_by_id"
+    t.integer "response", null: false
+    t.bigint "scheduled_event_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["deleted_at"], name: "index_scheduled_event_rsvps_on_deleted_at"
+    t.index ["responded_by_id"], name: "index_scheduled_event_rsvps_on_responded_by_id"
+    t.index ["scheduled_event_id", "user_id", "occurrence_start_at"], name: "idx_scheduled_event_rsvps_unique_per_occurrence", unique: true, where: "(deleted_at IS NULL)"
+    t.index ["scheduled_event_id"], name: "index_scheduled_event_rsvps_on_scheduled_event_id"
+    t.index ["user_id"], name: "index_scheduled_event_rsvps_on_user_id"
+  end
+
   create_table "scheduled_events", force: :cascade do |t|
     t.boolean "all_day", default: false, null: false
     t.string "cancellation_reason"
@@ -174,6 +191,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_30_120000) do
     t.jsonb "exdates", default: []
     t.date "recurs_until"
     t.text "rrule"
+    t.integer "rsvp_mode", default: 0, null: false
     t.bigint "schedulable_id", null: false
     t.string "schedulable_type", null: false
     t.datetime "start_at", null: false
@@ -257,6 +275,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_30_120000) do
   add_foreign_key "registrations", "leagues"
   add_foreign_key "registrations", "users"
   add_foreign_key "registrations", "users", column: "registered_by_id"
+  add_foreign_key "scheduled_event_rsvps", "scheduled_events"
+  add_foreign_key "scheduled_event_rsvps", "users"
+  add_foreign_key "scheduled_event_rsvps", "users", column: "responded_by_id"
   add_foreign_key "seasons", "activity_types"
   add_foreign_key "team_memberships", "teams"
   add_foreign_key "team_memberships", "users"
