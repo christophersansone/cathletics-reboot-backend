@@ -45,6 +45,83 @@ RSpec.describe "Api::V1::Registrations" do
 
       expect(response).to have_http_status(:unauthorized)
     end
+
+    it "allows a parent to register their child without an org header" do
+      expect {
+        post "/api/v1/registrations",
+          params: {
+            data: {
+              attributes: { status: "pending" },
+              relationships: {
+                user: { data: { type: "users", id: child.id.to_s } },
+                league: { data: { type: "leagues", id: league.id.to_s } }
+              }
+            }
+          },
+          headers: auth_headers_for(parent)
+      }.to change(Registration, :count).by(1)
+
+      expect(response).to have_http_status(:created)
+    end
+
+    it "allows an adult to register themselves" do
+      expect {
+        post "/api/v1/registrations",
+          params: {
+            data: {
+              attributes: { status: "pending" },
+              relationships: {
+                user: { data: { type: "users", id: parent.id.to_s } },
+                league: { data: { type: "leagues", id: league.id.to_s } }
+              }
+            }
+          },
+          headers: auth_headers_for(parent)
+      }.to change(Registration, :count).by(1)
+
+      expect(response).to have_http_status(:created)
+      expect(Registration.last.user).to eq(parent)
+    end
+
+    it "does not allow registering an unrelated user" do
+      stranger = create(:user)
+
+      expect {
+        post "/api/v1/registrations",
+          params: {
+            data: {
+              attributes: { status: "pending" },
+              relationships: {
+                user: { data: { type: "users", id: stranger.id.to_s } },
+                league: { data: { type: "leagues", id: league.id.to_s } }
+              }
+            }
+          },
+          headers: auth_headers_for(parent)
+      }.not_to change(Registration, :count)
+
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it "does not allow an org member to register an unrelated user, even with an org header" do
+      stranger = create(:user)
+
+      expect {
+        post "/api/v1/registrations",
+          params: {
+            data: {
+              attributes: { status: "pending" },
+              relationships: {
+                user: { data: { type: "users", id: stranger.id.to_s } },
+                league: { data: { type: "leagues", id: league.id.to_s } }
+              }
+            }
+          },
+          headers: auth_headers_for(parent, organization: organization)
+      }.not_to change(Registration, :count)
+
+      expect(response).to have_http_status(:forbidden)
+    end
   end
 
   describe "GET /api/v1/leagues/:league_id/registrations" do

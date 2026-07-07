@@ -32,6 +32,18 @@ RSpec.describe "Api::V1::Home" do
       expect(response).to have_http_status(:unauthorized)
     end
 
+    it "returns family members with self flagged" do
+      get "/api/v1/home", headers: auth_headers_for(parent)
+
+      expect(response).to have_http_status(:ok)
+      expect(parsed_data["hasFamily"]).to eq(true)
+
+      members = parsed_data["familyMembers"]
+      expect(members.map { |m| m["id"] }).to contain_exactly(parent.id, child.id)
+      expect(members.find { |m| m["id"] == parent.id }["isSelf"]).to eq(true)
+      expect(members.find { |m| m["id"] == child.id }["isSelf"]).to eq(false)
+    end
+
     context "active registrations" do
       let(:season) do
         create(:season, activity_type: activity_type,

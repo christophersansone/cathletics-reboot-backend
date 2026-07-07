@@ -1,22 +1,25 @@
 module Api
   module V1
     class HomeController < BaseController
+      include FamilyParticipants
+
       def show
-        render json: { data: { activeRegistrations: active_registrations_data, openLeagues: open_leagues_data } }
+        render json: {
+          data: {
+            activeRegistrations: active_registrations_data,
+            openLeagues: open_leagues_data,
+            familyMembers: family_members_data,
+            hasFamily: current_user.family_ids.any?
+          }
+        }
       end
 
       private
 
-      def participant_ids
-        @participant_ids ||= begin
-          family_ids = current_user.family_memberships.where(role: [:parent, :guardian]).pluck(:family_id)
-          child_ids = FamilyMembership.where(family_id: family_ids, role: :child).pluck(:user_id)
-          (child_ids + [current_user.id]).uniq
-        end
-      end
-
-      def participants
-        @participants ||= User.where(id: participant_ids).index_by(&:id)
+      def family_members_data
+        participants.values
+          .map { |u| compact_user(u).merge(isSelf: u.id == current_user.id) }
+          .sort_by { |m| [m[:isSelf] ? 1 : 0, m[:fullName]] }
       end
 
       def user_org_ids
@@ -133,10 +136,6 @@ module Api
         age = date.year - dob.year
         age -= 1 if date < dob + age.years
         age
-      end
-
-      def compact_user(user)
-        { id: user.id, fullName: user.full_name, gradeLevel: user.grade_level }
       end
     end
   end

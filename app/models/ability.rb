@@ -35,7 +35,7 @@ class Ability
     child_ids = FamilyMembership.where(family_id: family_ids, role: :child).pluck(:user_id)
     can :read, User, id: child_ids
     can :update, User, id: child_ids
-    can :create, Registration, user_id: child_ids
+    can :create, Registration, user_id: child_ids + [user.id]
     can :read, Registration, user_id: [user.id] + child_ids
     can [:cancel], Registration, registered_by_id: user.id
 
@@ -45,6 +45,7 @@ class Ability
     team_ids = TeamMembership.where(user_id: participant_ids).pluck(:team_id)
     can :read, Team, id: team_ids
     can :read, TeamMembership, team_id: team_ids
+    can :read, ScheduledEvent, schedulable_type: "Team", schedulable_id: team_ids
     can :read, ScheduledEventRsvp, scheduled_event: { schedulable_type: "Team", schedulable_id: team_ids }
   end
 
@@ -84,8 +85,6 @@ class Ability
     can :read, TeamMembership, team: { league: { season: { activity_type: { organization_id: organization.id } } } }
     can :read, ScheduledEvent, schedulable_type: "Team", schedulable_id: organization.team_ids
     can :read, ScheduledEventRsvp, scheduled_event: { schedulable_type: "Team", schedulable_id: organization.team_ids }
-
-    can :create, Registration
   end
 
   def define_team_role_abilities

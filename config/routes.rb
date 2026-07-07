@@ -11,6 +11,7 @@ Rails.application.routes.draw do
       resource :me, only: [:show, :update], controller: "me"
       resource :dashboard, only: [:show], controller: "dashboard"
       resource :home, only: [:show], controller: "home"
+      resource :schedule, only: [:show], controller: "schedule"
 
       resources :users
       resources :organization_memberships, only: [:index]
